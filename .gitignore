@@ -1,6 +1,6 @@
 .idea/
-react-web/build/
+frontend/build/
 venv/
-scraper/.idea/
-scraper/scraper
+backend/backend
 build/DEBIAN/changelog
+node_modules
