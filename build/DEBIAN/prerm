@@ -19,7 +19,7 @@ set -e
 
 case "$1" in
     remove|upgrade|deconfigure)
-    systemctl stop scraper
+    systemctl stop repeater-audio-control-backend
     rm -r /opt/repeater-audio-control/venv
     sed -i "s/.*.1.3.6.1.4.1.8072.2.255.*//" /etc/snmp/snmpd.local.conf
     ;;

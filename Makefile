@@ -8,7 +8,7 @@ build-deps:
 	sudo apt update
 	sudo apt install -y moreutils git-buildpackage build-essential
 
-react-web/build:
+frontend/build:
 	cd frontend; \
 	yarn install; \
 	yarn build
@@ -28,10 +28,10 @@ build/DEBIAN/changelog:
 	  --snapshot-number="'{:%Y%m%d%H%M%S}'.format(__import__('datetime').datetime.fromtimestamp(`git log -1 --pretty=format:%at`))"; \
 	sed -i 's/UNRELEASED/unstable/' DEBIAN/changelog
 
-scraper/scraper:
+backend/backend:
 	cd backend; make
 
-prepare-package: scraper/scraper react-web/build build/DEBIAN
+prepare-package: backend/backend frontend/build build/DEBIAN
 	mkdir -p build/opt/repeater-audio-control
 	cp -r snmp-passthrough.py README.md requirements.txt backend/backend backend/config.yaml build/opt/repeater-audio-control/
 	cp -r frontend/build build/opt/repeater-audio-control/frontend

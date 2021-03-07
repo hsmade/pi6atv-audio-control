@@ -31,7 +31,7 @@ case "$1" in
       /opt/repeater-audio-control/venv/bin/pip install -r /opt/repeater-audio-control/requirements.txt
       echo "(re)Starting services"
       systemctl daemon-reload
-      systemctl restart scraper
+      systemctl restart repeater-audio-control-backend
       systemctl reload nginx
       systemctl restart snmpd
 

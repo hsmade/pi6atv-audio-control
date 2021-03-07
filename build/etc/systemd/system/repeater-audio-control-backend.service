@@ -2,7 +2,7 @@
 Description=repeater audio control
 
 [Service]
-ExecStart=/opt/repeater-audio-control/scraper
+ExecStart=/opt/repeater-audio-control/backend
 WorkingDirectory=/opt/repeater-audio-control
 Restart=always
 
