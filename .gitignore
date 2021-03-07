@@ -2,5 +2,6 @@
 frontend/build/
 venv/
 backend/backend
+backend/vendor
 build/DEBIAN/changelog
 node_modules
