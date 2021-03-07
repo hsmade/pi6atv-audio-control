@@ -60,7 +60,7 @@ jobs:
     #    uses a compiled language
 
     - run: |
-       make make build-deps prepare-package
+       make build-deps prepare-package
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v1
