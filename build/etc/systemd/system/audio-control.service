@@ -1,0 +1,10 @@
+[Unit]
+Description=repeater audio control
+
+[Service]
+ExecStart=/opt/repeater-audio-control/scraper
+WorkingDirectory=/opt/repeater-audio-control
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

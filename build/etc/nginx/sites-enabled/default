@@ -1,0 +1,12 @@
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    root /opt/repeater-audio-control/web/;
+    index index.html index.htm index.nginx-debian.html;
+    server_name _;
+    location /api { proxy_pass http://127.0.0.1:5000; }
+    location /metrics { proxy_pass http://127.0.0.1:5000; }
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}

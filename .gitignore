@@ -1,0 +1,6 @@
+.idea/
+react-web/build/
+venv/
+scraper/.idea/
+scraper/scraper
+build/DEBIAN/changelog
