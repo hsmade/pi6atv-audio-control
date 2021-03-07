@@ -1,5 +1,5 @@
 build: vendor test vet
-	 GOARCH=arm GOARM=7 GOOS=linux go build
+	 GOARCH=arm GOARM=7 GOOS=linux go build cmd/backend.go
 
 vendor:
 	go mod vendor
