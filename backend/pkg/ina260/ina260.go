@@ -12,15 +12,15 @@ type Ina260 struct {
 	logger *logrus.Entry
 }
 
-func NewIna260(dev int) *Ina260 {
+func NewIna260(address int) *Ina260 {
 	I := &Ina260{
 		logger: logrus.WithFields(logrus.Fields{
-			"address": fmt.Sprintf("%x", dev),
+			"address": fmt.Sprintf("%x", address),
 			"package": "ina260",
 		}),
 	}
 
-	d, err := i2c.Open(&i2c.Devfs{Dev: "/dev/i2c-1"}, dev)
+	d, err := i2c.Open(&i2c.Devfs{Dev: "/address/i2c-1"}, address)
 	if err != nil {
 		I.logger.WithError(err).Fatal("failed to open i2c device")
 	}

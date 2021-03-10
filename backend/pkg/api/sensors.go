@@ -2,6 +2,13 @@ package api
 
 import "net/http"
 
-func SensorsGetAll(w http.ResponseWriter, r *http.Request) {
+type Sensors struct {
+}
+
+func NewSensors() (*Sensors, error) {
+	return nil, nil
+}
+
+func (s *Sensors) SensorsGetAll(w http.ResponseWriter, r *http.Request) {
 
 }
