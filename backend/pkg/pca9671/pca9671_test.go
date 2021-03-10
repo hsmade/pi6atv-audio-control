@@ -1,6 +1,7 @@
 package pca9671
 
 import (
+	"bytes"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/exp/io/i2c"
 	"reflect"
@@ -224,7 +225,7 @@ func TestPCA9671_SetAll(t *testing.T) {
 		fields  fields
 		args    args
 		wantErr bool
-		want    [2]byte
+		want    []byte
 	}{
 		{
 			name: "write 0b10010011 0b11001011",
@@ -239,7 +240,7 @@ func TestPCA9671_SetAll(t *testing.T) {
 				10: true, 11: true, 12: false, 13: true, 14: false, 15: false, 16: true, 17: true,
 			}},
 			wantErr: false,
-			want:    [2]byte{0b10010011, 0b11001011},
+			want:    []byte{0b10010011, 0b11001011},
 		},
 	}
 	for _, tt := range tests {
@@ -255,8 +256,10 @@ func TestPCA9671_SetAll(t *testing.T) {
 				t.Errorf("SetAll() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			got := tt.fields.device.(*fakeI2CDevice).Data
-			if !reflect.DeepEqual(tt.want, got) {
-				t.Errorf("written state = %#b, want %#b", got, tt.want)
+			if bytes.Compare(tt.want, got) != 0 {
+				t.Logf("got : %v, %d, %#b", got, len(got), got)
+				t.Logf("want: %v, %d, %#b", tt.want, len(tt.want), tt.want)
+				t.Errorf("written state=%#b, want=%#b", got, tt.want)
 			}
 
 		})

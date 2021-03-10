@@ -92,8 +92,8 @@ func (p *PCA9671) SetAll(state map[int]bool) error {
 
 // writeState sends the port states over I2C
 func (p *PCA9671) writeState() error {
-	first := 0xFF & ^(p.state[1])
-	second := 0xFF & ^(p.state[0])
+	first := p.state[0]
+	second := p.state[1]
 	return p.device.Write([]byte{first, second})
 }
 
