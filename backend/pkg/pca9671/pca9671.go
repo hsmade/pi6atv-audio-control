@@ -4,12 +4,15 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/exp/io/i2c"
+	"periph.io/x/conn/v3/i2c"
+	"periph.io/x/conn/v3/i2c/i2creg"
+	"periph.io/x/periph/host"
 	"sync"
 )
 
 type I2CWriter interface {
-	Write(b []byte) error
+	Write(b []byte) (int, error)
+	Tx(w, r []byte) error
 }
 
 // PCA9671 describes the PCA9671 IC
@@ -17,29 +20,36 @@ type I2CWriter interface {
 type PCA9671 struct {
 	state   [2]byte
 	device  I2CWriter
-	address int
+	bus  	i2c.BusCloser
+	address uint16
 	logger  *logrus.Entry
 	lock    sync.Locker
 }
 
 // NewPCA9671 creates a new PCA9671 object using address as I2C address
-func NewPCA9671(address int) (*PCA9671, error) {
+func NewPCA9671(address uint16) (*PCA9671, error) {
 	p := PCA9671{
 		address: address,
 		state:   [2]byte{0x00, 0x00}, // P07 P06 P05 P04 P03 P02 P01 P00, P17 P16 P15 P14 P13 P12 P11 P10
 		logger: logrus.WithFields(logrus.Fields{
 			"address": fmt.Sprintf("%x", address),
-			"package": "ina260",
+			"package": "pca9671",
 		}),
 		lock: &sync.Mutex{},
 	}
 
-	device, err := i2c.Open(&i2c.Devfs{Dev: "/dev/i2c-1"}, address)
-	if err != nil {
-		p.logger.WithError(err).Fatal("failed to open i2c device")
+	if _, err := host.Init(); err != nil {
+		p.logger.WithError(err).Fatal("registering I2C")
 	}
-	p.device = device
-	return &p, p.Check()
+
+	b, err := i2creg.Open("")
+	if err != nil {
+		p.logger.WithError(err).Fatal("opening I2C bus")
+	}
+	p.bus = b
+	p.device = &i2c.Dev{Addr: address, Bus: b}
+	return &p, nil
+	//return &p, p.Check()
 }
 
 // Check polls the device to see that it's connected
@@ -48,12 +58,9 @@ func (p *PCA9671) Check() error {
 	//  Re-START
 	// addr 1111 1001, read
 	// NACK
-	device, err := i2c.Open(&i2c.Devfs{Dev: "/dev/i2c-1"}, 0xF8)
-	if err != nil {
-		return errors.Wrap(err, "Opening device for ID")
-	}
+	device := &i2c.Dev{Addr: 0xF8, Bus: p.bus}
 	data := make([]byte, 3)
-	err = device.WriteReg(byte(p.address), data)
+	err := device.Tx([]byte{byte(p.address)}, data)
 	if err != nil {
 		return errors.Wrap(err, "Opening reading device ID")
 	}
@@ -94,7 +101,14 @@ func (p *PCA9671) SetAll(state map[int]bool) error {
 func (p *PCA9671) writeState() error {
 	first := p.state[0]
 	second := p.state[1]
-	return p.device.Write([]byte{first, second})
+	size, err := p.device.Write([]byte{first, second})
+	if err != nil {
+		return errors.Wrap(err, "writing to device")
+	}
+	if size != 2 {
+		return errors.New(fmt.Sprintf("write wrote %d bytes, instead of 2", size))
+	}
+	return nil
 }
 
 // Get gets the state of the requested port
