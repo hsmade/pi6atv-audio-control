@@ -6,7 +6,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"periph.io/x/conn/v3/i2c"
 	"periph.io/x/conn/v3/i2c/i2creg"
-	"periph.io/x/periph/host"
+	"periph.io/x/host/v3"
 	"sync"
 )
 
@@ -20,7 +20,7 @@ type I2CWriter interface {
 type PCA9671 struct {
 	state   [2]byte
 	device  I2CWriter
-	bus  	i2c.BusCloser
+	bus     i2c.BusCloser
 	address uint16
 	logger  *logrus.Entry
 	lock    sync.Locker
@@ -48,8 +48,14 @@ func NewPCA9671(address uint16) (*PCA9671, error) {
 	}
 	p.bus = b
 	p.device = &i2c.Dev{Addr: address, Bus: b}
-	return &p, nil
 	//return &p, p.Check()
+	//return &p, nil
+	err = p.readState() // set all to the actual state
+	return &p, err
+}
+
+func (p *PCA9671) Close() error {
+	return p.bus.Close()
 }
 
 // Check polls the device to see that it's connected
@@ -58,7 +64,7 @@ func (p *PCA9671) Check() error {
 	//  Re-START
 	// addr 1111 1001, read
 	// NACK
-	device := &i2c.Dev{Addr: 0xF8, Bus: p.bus}
+	device := &i2c.Dev{Addr: 248, Bus: p.bus}
 	data := make([]byte, 3)
 	err := device.Tx([]byte{byte(p.address)}, data)
 	if err != nil {
@@ -99,23 +105,33 @@ func (p *PCA9671) SetAll(state map[int]bool) error {
 
 // writeState sends the port states over I2C
 func (p *PCA9671) writeState() error {
+	p.logger.WithField("func", "writeState").Debugf("Writing state: %#b", p.state)
 	first := p.state[0]
 	second := p.state[1]
-	size, err := p.device.Write([]byte{first, second})
+	err := p.device.Tx([]byte{first, second}, nil)
 	if err != nil {
 		return errors.Wrap(err, "writing to device")
-	}
-	if size != 2 {
-		return errors.New(fmt.Sprintf("write wrote %d bytes, instead of 2", size))
 	}
 	return nil
 }
 
+func (p *PCA9671) readState() error {
+	data := make([]byte, 2)
+	err := p.device.Tx(nil, data)
+	p.logger.WithField("func", "readState").Debugf("data: %#b err: %v", data, err)
+	result := [2]byte{data[0], data[1]}
+	if err == nil {
+		p.state = result
+	}
+	return errors.Wrap(err, "reading from device")
+}
+
 // Get gets the state of the requested port
-func (p *PCA9671) Get(port int) bool {
+func (p *PCA9671) Get(port int) (bool, error) {
 	p.lock.Lock()
 	defer p.lock.Unlock()
-	return getBit(p.state, port)
+	err := p.readState()
+	return getBit(p.state, port), errors.Wrap(err, "reading state")
 }
 
 // Set sets the state of the requested port

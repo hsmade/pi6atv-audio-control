@@ -3,17 +3,17 @@ package main
 import (
 	"github.com/hsmade/pi6atv-audio-control/backend/pkg/api"
 	"github.com/hsmade/pi6atv-audio-control/backend/pkg/config"
-	"log"
+	"github.com/sirupsen/logrus"
 	"net/http"
 	"periph.io/x/periph/host"
-
 )
 
 func main() {
+	logrus.SetLevel(logrus.DebugLevel)
 	host.Init()
 	router, err := api.NewRouter(config.Config{})
 	if err != nil {
-		log.Fatal(err)
+		logrus.Fatal(err)
 	}
-	log.Fatal(http.ListenAndServe(":8001", router))
+	logrus.Fatal(http.ListenAndServe(":8001", router))
 }

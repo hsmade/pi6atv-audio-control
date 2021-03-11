@@ -4,6 +4,10 @@
  * api framework
  * metrics
  * control
+  * pca module
+  * save state on quit / exit
+  * quit on exit
+  * read state on init
 
 ## frontend
  * sensors
