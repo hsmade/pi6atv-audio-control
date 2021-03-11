@@ -169,11 +169,12 @@ func TestPCA9671_GetAll(t *testing.T) {
 	}
 }
 
-// TODO
 func TestPCA9671_Set(t *testing.T) {
+	device := fakeI2CDevice{}
+
 	type fields struct {
 		state   [2]byte
-		device  *i2c.Device
+		device  I2CWriter
 		address int
 		logger  *logrus.Entry
 		lock    sync.Locker
@@ -187,8 +188,20 @@ func TestPCA9671_Set(t *testing.T) {
 		fields  fields
 		args    args
 		wantErr bool
+		want    []byte
 	}{
-		// TODO: Add test cases.
+		{
+			name: "set P03",
+			fields: fields{
+				state:   [2]byte{},
+				device:  &device,
+				address: 23,
+				lock:    &sync.Mutex{},
+			},
+			args:    args{port: 3, state: true},
+			wantErr: false,
+			want:    []byte{0b00001000, 0b00000000},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -202,11 +215,16 @@ func TestPCA9671_Set(t *testing.T) {
 			if err := p.Set(tt.args.port, tt.args.state); (err != nil) != tt.wantErr {
 				t.Errorf("Set() error = %v, wantErr %v", err, tt.wantErr)
 			}
+			got := tt.fields.device.(*fakeI2CDevice).Data
+			if bytes.Compare(tt.want, got) != 0 {
+				t.Logf("got : %v, %d, %#b", got, len(got), got)
+				t.Logf("want: %v, %d, %#b", tt.want, len(tt.want), tt.want)
+				t.Errorf("written state=%#b, want=%#b", got, tt.want)
+			}
 		})
 	}
 }
 
-// TODO
 func TestPCA9671_SetAll(t *testing.T) {
 	device := fakeI2CDevice{}
 
@@ -261,16 +279,16 @@ func TestPCA9671_SetAll(t *testing.T) {
 				t.Logf("want: %v, %d, %#b", tt.want, len(tt.want), tt.want)
 				t.Errorf("written state=%#b, want=%#b", got, tt.want)
 			}
-
 		})
 	}
 }
 
-// TODO
 func TestPCA9671_writeState(t *testing.T) {
+	device := fakeI2CDevice{}
+
 	type fields struct {
 		state   [2]byte
-		device  *i2c.Device
+		device  I2CWriter
 		address int
 		logger  *logrus.Entry
 		lock    sync.Locker
@@ -279,8 +297,17 @@ func TestPCA9671_writeState(t *testing.T) {
 		name    string
 		fields  fields
 		wantErr bool
+		want    []byte
 	}{
-		// TODO: Add test cases.
+		{
+			name: "write 0b10101100 0b00110001",
+			fields: fields{
+				state:  [2]byte{0b10101100, 0b00110001},
+				device: &device,
+			},
+			wantErr: false,
+			want:    []byte{0b10101100, 0b00110001},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -293,6 +320,12 @@ func TestPCA9671_writeState(t *testing.T) {
 			}
 			if err := p.writeState(); (err != nil) != tt.wantErr {
 				t.Errorf("writeState() error = %v, wantErr %v", err, tt.wantErr)
+				got := tt.fields.device.(*fakeI2CDevice).Data
+				if bytes.Compare(tt.want, got) != 0 {
+					t.Logf("got : %v, %d, %#b", got, len(got), got)
+					t.Logf("want: %v, %d, %#b", tt.want, len(tt.want), tt.want)
+					t.Errorf("written state=%#b, want=%#b", got, tt.want)
+				}
 			}
 		})
 	}
