@@ -1,0 +1,108 @@
+carriers:
+  - name: 7.02
+    port: 7
+    border:
+      - x: 120
+        y: 10
+      - x: 140
+        y: 50
+  - name: 7.20
+    port: 10
+    border:
+      - x: 150
+        y: 10
+      - x: 170
+        y: 50
+  - name: 7.38
+    port: 11
+    border:
+      - x: 70
+        y: 10
+      - x: 90
+        y: 50
+  - name: 7.56
+    port: 12
+    border:
+      - x: 100
+        y: 10
+      - x: 120
+        y: 50
+  - name: 7.74
+    port: 13
+    border:
+      - x: 10
+        y: 40
+      - x: 50
+        y: 60
+  - name: 7.92
+    port: 14
+    border:
+      - x: 10
+        y: 10
+      - x: 50
+        y: 30
+  - name: 5.85
+    port: 15
+    border:
+      - x: 10
+        y: 40
+      - x: 50
+        y: 60
+  - name: 6.552
+    port: 16
+    border:
+      - x: 10
+        y: 10
+      - x: 50
+        y: 30
+
+dsps:
+  - name: 7.02/7.20
+    port: 0
+    border:
+      - x: 0
+        y: 0
+      - x: 1
+        y: 1
+  - name: 7.38/7.56
+    port: 1
+    border:
+      - x: 0
+        y: 0
+      - x: 1
+        y: 1
+  - name: 7.74/7.92
+    port: 2
+    border:
+      - x: 0
+        y: 0
+      - x: 1
+        y: 1
+  - name: 5.82
+    port: 3
+    border:
+      - x: 0
+        y: 0
+      - x: 1
+        y: 1
+  - name: 6.552
+    port: 4
+    border:
+      - x: 0
+        y: 0
+      - x: 1
+        y: 1
+
+programmer:
+  - name: program
+    port: 5
+    x: 0
+    y: 0
+  - name: reset
+    port: 6
+    delay: 1000 # how long to wait after switching off the program port, before switching on the reset, in ms
+    duration: 1000 # how long to keep reset enabled for, in ms
+    x: 0
+    y: 0
+
+
