@@ -1,18 +1,20 @@
 # TODO
 ## backend
- * sensors
  * ~~api framework~~
  * metrics
+   * state
+   * http 
  * control
   * config (now hardcoded)
   * ~~pca module~~
   * pca check
   * ~~read state on init~~
+  * persist state to disk on changes
+  * read state from disk on init
 
 ## frontend
- * sensors
  * control
- * background
+ * background -> draw?
 
 ## snmp
- * use API instead of json file
+ * use API instead of json file, or persist using json and use this?
