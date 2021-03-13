@@ -1,13 +1,13 @@
 # TODO
 ## backend
  * sensors
- * api framework
+ * ~~api framework~~
  * metrics
  * control
-  * pca module
-  * save state on quit / exit
-  * quit on exit
-  * read state on init
+  * config (now hardcoded)
+  * ~~pca module~~
+  * pca check
+  * ~~read state on init~~
 
 ## frontend
  * sensors

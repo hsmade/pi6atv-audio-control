@@ -20,7 +20,6 @@ func NewRouter(config config.Config) (*mux.Router, error) {
 
 	router := mux.NewRouter()
 	router.HandleFunc("/control/", control.ControlGetAll)
-	router.HandleFunc("/control/quit", control.ControlQuit)
 	router.HandleFunc("/control/check", control.ControlCheck)
 	router.HandleFunc("/control/{relay}", control.ControlGetRelay).Methods("GET")
 	router.HandleFunc("/control/{relay}/{state}", control.ControlSetRelay).Methods("POST")

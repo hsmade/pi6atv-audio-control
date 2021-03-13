@@ -74,16 +74,6 @@ func (c *Control) ControlSetRelay(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(result)
 }
 
-func (c *Control) ControlQuit(w http.ResponseWriter, r *http.Request) {
-	logrus.Debugf("ControlQuit called with %v", r.URL.Path)
-	w.Header().Set("Content-Type", "application/json")
-	err := c.pca.Close()
-	if err != nil {
-		Error{Message: "error closing PCA", Error: err}.Send(w)
-	}
-	w.WriteHeader(200)
-}
-
 func (c *Control) ControlCheck(w http.ResponseWriter, r *http.Request) {
 	logrus.Debugf("ControlCheck called with %v", r.URL.Path)
 	w.Header().Set("Content-Type", "application/json")
