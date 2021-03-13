@@ -3,26 +3,36 @@ package pca9671
 import (
 	"bytes"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/exp/io/i2c"
 	"reflect"
 	"sync"
 	"testing"
 )
 
 type fakeI2CDevice struct {
-	Data []byte
+	WrittenData []byte
+	ReadData    []byte
 }
 
-func (f *fakeI2CDevice) Write(b []byte) error {
-	f.Data = make([]byte, len(b))
-	copy(f.Data, b)
+func (f *fakeI2CDevice) Write(b []byte) (int, error) {
+	f.WrittenData = make([]byte, len(b))
+	copy(f.WrittenData, b)
+	return len(b), nil
+}
+
+func (f *fakeI2CDevice) Tx(w []byte, r []byte) error {
+	f.WrittenData = make([]byte, len(w))
+	copy(f.WrittenData, w)
+	if len(f.ReadData) > 0 {
+		logrus.Debugf("fakeI2CDevice: returning: %#b", f.ReadData)
+		copy(r, f.ReadData)
+	}
 	return nil
 }
 
 // TODO
 func TestNewPCA9671(t *testing.T) {
 	type args struct {
-		address int
+		address uint16
 	}
 	tests := []struct {
 		name    string
@@ -50,8 +60,8 @@ func TestNewPCA9671(t *testing.T) {
 func TestPCA9671_Check(t *testing.T) {
 	type fields struct {
 		state   [2]byte
-		device  *i2c.Device
-		address int
+		device  I2CWriter
+		address uint16
 		logger  *logrus.Entry
 		lock    sync.Locker
 	}
@@ -79,10 +89,11 @@ func TestPCA9671_Check(t *testing.T) {
 }
 
 func TestPCA9671_Get(t *testing.T) {
+	logrus.SetLevel(logrus.DebugLevel)
 	type fields struct {
 		state   [2]byte
-		device  *i2c.Device
-		address int
+		device  I2CWriter
+		address uint16
 		logger  *logrus.Entry
 		lock    sync.Locker
 	}
@@ -90,34 +101,43 @@ func TestPCA9671_Get(t *testing.T) {
 		port int
 	}
 	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   bool
+		name    string
+		fields  fields
+		args    args
+		want    bool
+		wantErr bool
 	}{
 		{
-			name:   "Get P03, set",
-			fields: fields{state: [2]byte{0b00001000, 0b00000000}, lock: &sync.Mutex{}},
-			args:   args{port: 3},
-			want:   true,
+			name:    "Get P03, set",
+			fields:  fields{state: [2]byte{0b00001000, 0b00000000}, lock: &sync.Mutex{}, address: 0x20},
+			args:    args{port: 3},
+			want:    true,
+			wantErr: false,
 		},
 		{
-			name:   "Get P15, cleared",
-			fields: fields{state: [2]byte{0b11111111, 0b11011111}, lock: &sync.Mutex{}},
-			args:   args{port: 15},
-			want:   false,
+			name:    "Get P15, cleared",
+			fields:  fields{state: [2]byte{0b11111111, 0b11011111}, lock: &sync.Mutex{}},
+			args:    args{port: 15},
+			want:    false,
+			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			device := fakeI2CDevice{ReadData: []byte{tt.fields.state[0], tt.fields.state[1]}}
 			p := &PCA9671{
 				state:   tt.fields.state,
-				device:  tt.fields.device,
+				device:  &device,
 				address: tt.fields.address,
-				logger:  tt.fields.logger,
+				logger:  logrus.WithField("foo", "bar"),
 				lock:    tt.fields.lock,
 			}
-			if got := p.Get(tt.args.port); got != tt.want {
+			got, err := p.Get(tt.args.port)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Set() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+			if got != tt.want {
 				t.Errorf("Get() = %v, want %v", got, tt.want)
 			}
 		})
@@ -128,8 +148,8 @@ func TestPCA9671_GetAll(t *testing.T) {
 	logrus.SetLevel(logrus.DebugLevel)
 	type fields struct {
 		state   [2]byte
-		device  *i2c.Device
-		address int
+		device  I2CWriter
+		address uint16
 		logger  *logrus.Entry
 		lock    sync.Locker
 	}
@@ -175,7 +195,7 @@ func TestPCA9671_Set(t *testing.T) {
 	type fields struct {
 		state   [2]byte
 		device  I2CWriter
-		address int
+		address uint16
 		logger  *logrus.Entry
 		lock    sync.Locker
 	}
@@ -209,13 +229,13 @@ func TestPCA9671_Set(t *testing.T) {
 				state:   tt.fields.state,
 				device:  tt.fields.device,
 				address: tt.fields.address,
-				logger:  tt.fields.logger,
+				logger:  logrus.WithField("foo", "bar"),
 				lock:    tt.fields.lock,
 			}
 			if err := p.Set(tt.args.port, tt.args.state); (err != nil) != tt.wantErr {
 				t.Errorf("Set() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			got := tt.fields.device.(*fakeI2CDevice).Data
+			got := tt.fields.device.(*fakeI2CDevice).WrittenData
 			if bytes.Compare(tt.want, got) != 0 {
 				t.Logf("got : %v, %d, %#b", got, len(got), got)
 				t.Logf("want: %v, %d, %#b", tt.want, len(tt.want), tt.want)
@@ -231,7 +251,7 @@ func TestPCA9671_SetAll(t *testing.T) {
 	type fields struct {
 		state   [2]byte
 		device  I2CWriter
-		address int
+		address uint16
 		logger  *logrus.Entry
 		lock    sync.Locker
 	}
@@ -267,13 +287,13 @@ func TestPCA9671_SetAll(t *testing.T) {
 				state:   tt.fields.state,
 				device:  tt.fields.device,
 				address: tt.fields.address,
-				logger:  tt.fields.logger,
+				logger:  logrus.WithField("foo", "bar"),
 				lock:    tt.fields.lock,
 			}
 			if err := p.SetAll(tt.args.state); (err != nil) != tt.wantErr {
 				t.Errorf("SetAll() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			got := tt.fields.device.(*fakeI2CDevice).Data
+			got := tt.fields.device.(*fakeI2CDevice).WrittenData
 			if bytes.Compare(tt.want, got) != 0 {
 				t.Logf("got : %v, %d, %#b", got, len(got), got)
 				t.Logf("want: %v, %d, %#b", tt.want, len(tt.want), tt.want)
@@ -289,7 +309,7 @@ func TestPCA9671_writeState(t *testing.T) {
 	type fields struct {
 		state   [2]byte
 		device  I2CWriter
-		address int
+		address uint16
 		logger  *logrus.Entry
 		lock    sync.Locker
 	}
@@ -315,12 +335,12 @@ func TestPCA9671_writeState(t *testing.T) {
 				state:   tt.fields.state,
 				device:  tt.fields.device,
 				address: tt.fields.address,
-				logger:  tt.fields.logger,
+				logger:  logrus.WithField("foo", "bar"),
 				lock:    tt.fields.lock,
 			}
 			if err := p.writeState(); (err != nil) != tt.wantErr {
 				t.Errorf("writeState() error = %v, wantErr %v", err, tt.wantErr)
-				got := tt.fields.device.(*fakeI2CDevice).Data
+				got := tt.fields.device.(*fakeI2CDevice).WrittenData
 				if bytes.Compare(tt.want, got) != 0 {
 					t.Logf("got : %v, %d, %#b", got, len(got), got)
 					t.Logf("want: %v, %d, %#b", tt.want, len(tt.want), tt.want)
