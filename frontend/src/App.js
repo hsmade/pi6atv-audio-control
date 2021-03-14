@@ -1,4 +1,4 @@
-import Icon from "./svgexport";
+// import Icon from "./svgexport";
 import Diagram from "./diagram";
 
 function App() {
