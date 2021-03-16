@@ -5,16 +5,22 @@
    * state
    * http 
  * control
-  * config (now hardcoded)
+  * config (now hardcoded) <- device address, bus
   * ~~pca module~~
-  * pca check
+  * pca check / ident
   * ~~read state on init~~
-  * persist state to disk on changes
-  * read state from disk on init
+  * persist state to disk on changes -> persist.json
+  * read state from disk on init <- persist.json
 
 ## frontend
- * control
- * background -> draw?
+ * ~~diagram~~
+ * ~~logic~~
+ * http calls
+  * ~~get status~~
+  * set port
+ * read config
+  * API url
+  * delays (reset)
 
 ## snmp
- * use API instead of json file, or persist using json and use this?
+ * change json file location to persist.json
