@@ -5,7 +5,7 @@
    * state
    * http 
  * control
-  * config (now hardcoded) <- device address, bus
+  * read config from yaml <- device address, bus
   * ~~pca module~~
   * pca check / ident
   * ~~read state on init~~
@@ -15,12 +15,10 @@
 ## frontend
  * ~~diagram~~
  * ~~logic~~
- * http calls
+ * ~~http calls~~
   * ~~get status~~
-  * set port
- * read config
-  * API url
-  * delays (reset)
+  * ~~set port~~
+ * read config from yaml
 
 ## snmp
  * change json file location to persist.json

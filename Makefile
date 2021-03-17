@@ -33,8 +33,9 @@ backend/backend:
 
 prepare-package: backend/backend frontend/build build/DEBIAN
 	mkdir -p build/opt/repeater-audio-control
-	cp -r snmp-passthrough.py README.md requirements.txt backend/backend backend/config.yaml build/opt/repeater-audio-control/
+	cp -r snmp-passthrough.py README.md requirements.txt backend/backend config.yaml build/opt/repeater-audio-control/
 	cp -r frontend/build build/opt/repeater-audio-control/frontend
+	ln -s ../config.yaml build/opt/repeater-audio-control/frontend/config.yaml
 	sed -e "s/Version:.*/Version: $(VERSION)/" -i build/DEBIAN/control
 
 build-package: prepare-package
