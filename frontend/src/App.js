@@ -2,7 +2,7 @@ import Diagram from "./diagram";
 
 function App() {
   return (
-      <div>
+      <div style={{display:"flex", justifyContent:"center"}}>
       <Diagram/>
       </div>
   );
