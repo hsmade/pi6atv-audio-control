@@ -1,0 +1,10 @@
+div {
+    display:flex; justify-content:center;
+}
+
+@media only screen
+and (max-device-width: 751px) {
+    div {
+     display:block; justify-content:center;
+    }
+}

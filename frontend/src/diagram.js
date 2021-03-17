@@ -81,11 +81,24 @@ export default class Diagram extends React.Component {
         return this.state.ports[port]?green:red
     }
 
+    hasPortSelected() {
+        this.state.ports.map(port => {
+            if (port) {
+                return true
+            }
+        })
+        return false
+    }
+
     async toggleProgram() {
         if (this.state.program) {
             console.log("Disable program")
             await this.disablePort(5)
         } else {
+            if (!this.hasPortSelected()) {
+                console.log("Not enabling program as there is no active port")
+                return
+            }
             console.log("Enable program")
             await this.enablePort(5)
         }
@@ -93,6 +106,11 @@ export default class Diagram extends React.Component {
     }
 
     async startReset() {
+        if (!this.hasPortSelected()) {
+            console.log("Not enabling reset as there is no active port")
+            return
+        }
+
         console.log("Enable reset")
         this.setState({resetButton: true})
 
