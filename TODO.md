@@ -18,9 +18,9 @@
  * ~~http calls~~
   * ~~get status~~
   * ~~set port~~
- * read config from json
+ * ~~read config from json~~
  * scaling
- * pressing on an activated DSP should deactivate it
+ * ~~pressing on an activated DSP should deactivate it~~
 
 ## snmp
  * change json file location to persist.json

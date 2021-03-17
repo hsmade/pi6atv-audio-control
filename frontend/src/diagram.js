@@ -111,11 +111,18 @@ export default class Diagram extends React.Component {
         }.bind(this), resetWaitDuration)
     }
 
-    async enableDSP(port) {
+    async toggleDSP(port) {
         if (this.state.program || this.state.resetButton) {
             console.log("Ignoring request to enable DSP", port, "as we're programming/resetting")
             return
         }
+
+        // if port is already enabled, just disable it
+        if (this.state.ports[port]) {
+            await this.disablePort(port)
+            return
+        }
+
         console.log("Enable DSP",port)
         // disable all DSPs
         for (let i=0; i<=5; i++) {
@@ -141,7 +148,7 @@ export default class Diagram extends React.Component {
                 x={x} y={y}
                 text={"DSP-" + dsp}
                 color={this.dspButtonColor(dsp-1)}
-                clickHandler={this.enableDSP.bind(this)} clickValue={dsp-1}
+                clickHandler={this.toggleDSP.bind(this)} clickValue={dsp-1}
             />
         )
     }
