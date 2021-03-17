@@ -3,6 +3,9 @@ import './diagram.css';
 
 const stroke = "#41719c"
 const fill = "#5b9bd5"
+const red = "#d55b5b"
+const orange = "#d59b5b"
+const green = "#5bb59b"
 
 export class RoundedRect extends React.Component {
     // run the click handler, and if we have click values, use them as arguments
@@ -107,7 +110,7 @@ export class Diamond extends React.Component {
             <svg height={60} width={120} x={x} y={y}>
                 <polygon
                     points={"1,30 60,1 119,30 60,59 1,30"}
-                    fill={fill}
+                    fill={this.props.color}
                     stroke={stroke} strokeWidth={2}
                 />
                 <text
@@ -189,7 +192,7 @@ export default class Diagram extends React.Component {
     dspButtonColor(port) {
         let color = fill
         if (this.state.ports[port] ) {
-            color = "#5bb59b"
+            color = green
         }
         return color
     }
@@ -197,12 +200,12 @@ export default class Diagram extends React.Component {
     dspColor(port) {
         let color = fill
         if (this.state.ports[port] ) {
-            color = "#5bb59b"
+            color = green
             if (this.state.program) {
-                color = "#d55b5b"
+                color = red
             }
             if (this.state.reset) {
-                color = "#d59b5b"
+                color = orange
             }
         }
         return color
@@ -211,9 +214,9 @@ export default class Diagram extends React.Component {
     carrierColor(port) {
         let color
         if (this.state.ports[port] ) {
-            color = "#5bb59b"
+            color = green
         } else {
-            color = "#d55b5b"
+            color = red
         }
         return color
     }
@@ -310,7 +313,7 @@ export default class Diagram extends React.Component {
                 <RoundedRect
                     x={0} y={610}
                     text={"Program"}
-                    color={this.state.program?"#d55b5b":fill}
+                    color={this.state.program?red:fill}
                     clickHandler={this.toggleProgram.bind(this)}
                 />
                 <line x1={120} y1={610} x2={298} y2={610}/>
@@ -319,7 +322,7 @@ export default class Diagram extends React.Component {
                 <RoundedRect
                     x={0} y={710}
                     text={"Reset"}
-                    color={this.state.resetButton?"#d55b5b":fill}
+                    color={this.state.resetButton?red:fill}
                     clickHandler={this.startReset.bind(this)}
                 />
                 <line x1={120} y1={710} x2={298} y2={710}/>
@@ -327,7 +330,10 @@ export default class Diagram extends React.Component {
                 // Besturing
                 <line x1={160} y1={330} x2={220} y2={330}/>
                 <ArrowRight x={220} y={330}/>
-                <Diamond x={238} y={330} text={"Besturing"}/>
+                <Diamond
+                    x={238} y={330} text={"Besturing"}
+                    color={this.state.program?red:this.state.reset?orange:fill}
+                />
                 <ArrowUp x={292} y={366}/>
                 <line x1={298} y1={366} x2={298} y2={710}/>
                 <line x1={358} y1={330} x2={398} y2={330}/>
