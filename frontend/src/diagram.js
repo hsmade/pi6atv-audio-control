@@ -112,6 +112,10 @@ export default class Diagram extends React.Component {
     }
 
     async enableDSP(port) {
+        if (this.state.program || this.state.resetButton) {
+            console.log("Ignoring request to enable DSP", port, "as we're programming/resetting")
+            return
+        }
         console.log("Enable DSP",port)
         // disable all DSPs
         for (let i=0; i<=5; i++) {
@@ -197,7 +201,7 @@ export default class Diagram extends React.Component {
                 <ArrowRight x={220} y={330}/>
                 <Diamond
                     x={238} y={330} text={"Besturing"}
-                    color={this.state.program?red:this.state.reset?orange:fill}
+                    color={this.state.program?red:fill}
                 />
                 <ArrowUp x={292} y={366}/>
                 <line x1={298} y1={366} x2={298} y2={710}/>

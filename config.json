@@ -1,0 +1,17 @@
+{
+  "backend": {
+    "pca": {
+      "address": 20
+    }
+  },
+  "frontend" : {
+    "api": "/control/",
+    "stroke": "#41719c",
+    "fill": "#5b9bd5",
+    "red": "#d55b5b",
+    "orange": "#d59b5b",
+    "green": "#5bb59b",
+    "resetDuration": 1000,
+    "resetWaitDuration": 1000
+  }
+}

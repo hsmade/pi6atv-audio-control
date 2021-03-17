@@ -5,7 +5,7 @@
    * state
    * http 
  * control
-  * read config from yaml <- device address, bus
+  * read config from json <- device address, bus
   * ~~pca module~~
   * pca check / ident
   * ~~read state on init~~
@@ -18,7 +18,9 @@
  * ~~http calls~~
   * ~~get status~~
   * ~~set port~~
- * read config from yaml
+ * read config from json
+ * scaling
+ * pressing on an activated DSP should deactivate it
 
 ## snmp
  * change json file location to persist.json
