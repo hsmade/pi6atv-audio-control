@@ -71,21 +71,21 @@ export class Tube extends React.Component {
                 <ellipse
                     cx={12} cy={30}
                     ry={29} rx={10}
-                    fill={fill}
+                    fill={this.props.color}
                     stroke={stroke}
                     strokeWidth={2}
                 />
                 <rect
                     x={10} y={2}
                     width={100} height={56}
-                    fill={fill}
+                    fill={this.props.color}
                 />
                 <line x1={11} y1={1}  x2={109} y2={1}  style={{stroke:stroke}}/>
                 <line x1={11} y1={59} x2={109} y2={59} style={{stroke:stroke}}/>
                 <ellipse
                     cx={108} cy={30}
                     ry={29} rx={10}
-                    fill={fill}
+                    fill={this.props.color}
                     stroke={stroke} strokeWidth={2}
                 />
 
@@ -169,7 +169,8 @@ export default class Diagram extends React.Component {
         this.state = {
             ports: [],
             program: false,
-            reset: false
+            reset: false,
+            resetButton: false,
         };
     }
 
@@ -183,6 +184,14 @@ export default class Diagram extends React.Component {
         } catch(e) {
             console.log(e);
         }
+    }
+
+    dspButtonColor(port) {
+        let color = fill
+        if (this.state.ports[port] ) {
+            color = "#5bb59b"
+        }
+        return color
     }
 
     dspColor(port) {
@@ -222,14 +231,15 @@ export default class Diagram extends React.Component {
 
     startReset() {
         console.log("Enable reset")
-        disablePort(5)
+        this.setState({resetButton: true})
+        disablePort(5) // disable program
         this.setState({program: false})
         setTimeout(function (){
-            enablePort(6)
+            enablePort(6) // enable reset
             this.setState({reset: true})
             setTimeout(function (){
-                disablePort(6)
-                this.setState({reset: false})
+                disablePort(6) // disable reset
+                this.setState({reset: false, resetButton: false})
             }.bind(this), 1000) // FIXME: config
         }.bind(this), 1000) // FIXME: config
     }
@@ -257,7 +267,7 @@ export default class Diagram extends React.Component {
             <RoundedRect
                 x={x} y={y}
                 text={"DSP-" + dsp}
-                color={this.dspColor(dsp-1)}
+                color={this.dspButtonColor(dsp-1)}
                 clickHandler={this.enableDSP} clickValue={dsp-1}
             />
         )
@@ -309,7 +319,7 @@ export default class Diagram extends React.Component {
                 <RoundedRect
                     x={0} y={710}
                     text={"Reset"}
-                    color={this.state.reset?"#d55b5b":fill}
+                    color={this.state.resetButton?"#d55b5b":fill}
                     clickHandler={this.startReset.bind(this)}
                 />
                 <line x1={120} y1={710} x2={298} y2={710}/>
@@ -326,7 +336,7 @@ export default class Diagram extends React.Component {
                 // DSP 1
                 <line x1={398} y1={78} x2={478} y2={78}/>
                 <ArrowRight x={478} y={78}/>
-                <Tube x={496} y={78} text={"DSP-1"}/>
+                <Tube x={496} y={78} text={"DSP-1"} color={this.dspColor(0)}/>
                 // Carrier 1
                 <line x1={616} y1={78} x2={656} y2={78}/>
                 <ArrowRight x={656} y={78}/>
@@ -345,7 +355,7 @@ export default class Diagram extends React.Component {
                 // DSP 2
                 <line x1={398} y1={258} x2={478} y2={258}/>
                 <ArrowRight x={478} y={258}/>
-                <Tube x={496} y={258} text={"DSP-2"}/>
+                <Tube x={496} y={258} text={"DSP-2"} color={this.dspColor(1)}/>
                 // Carrier 2
                 <line x1={616} y1={258} x2={656} y2={258}/>
                 <ArrowRight x={656} y={258}/>
@@ -364,7 +374,7 @@ export default class Diagram extends React.Component {
                 // DSP 3
                 <line x1={398} y1={438} x2={478} y2={438}/>
                 <ArrowRight x={478} y={438}/>
-                <Tube x={496} y={438} text={"DSP-3"}/>
+                <Tube x={496} y={438} text={"DSP-3"} color={this.dspColor(2)}/>
                 // Carrier 3
                 <line x1={616} y1={438} x2={656} y2={438}/>
                 <ArrowRight x={656} y={438}/>
@@ -383,7 +393,7 @@ export default class Diagram extends React.Component {
                 // DSP 4
                 <line x1={398} y1={610} x2={478} y2={610}/>
                 <ArrowRight x={478} y={610}/>
-                <Tube x={496} y={610} text={"DSP-4"}/>
+                <Tube x={496} y={610} text={"DSP-4"} color={this.dspColor(3)}/>
                 // Carrier 4
                 <line x1={616} y1={610} x2={656} y2={610}/>
                 <ArrowRight x={656} y={610}/>
@@ -397,7 +407,7 @@ export default class Diagram extends React.Component {
                 // DSP 5
                 <line x1={398} y1={710} x2={478} y2={710}/>
                 <ArrowRight x={478} y={710}/>
-                <Tube x={496} y={710} text={"DSP-5"}/>
+                <Tube x={496} y={710} text={"DSP-5"} color={this.dspColor(4)}/>
                 // Carrier 5
                 <line x1={616} y1={710} x2={656} y2={710}/>
                 <ArrowRight x={656} y={710}/>
