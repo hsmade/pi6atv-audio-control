@@ -82,11 +82,9 @@ export default class Diagram extends React.Component {
     }
 
     hasPortSelected() {
-        this.state.ports.map(port => {
-            if (port) {
-                return true
-            }
-        })
+        for (let i=0; i<=5; i++) {
+            if (this.state.ports[i]) return true
+        }
         return false
     }
 
@@ -184,7 +182,7 @@ export default class Diagram extends React.Component {
 
     render() {
         return (
-            <svg viewBox={"0 0 1012 763"} style={{position: "absolute", height: "100%"}}>
+            <svg viewBox={"0 0 1012 763"}>
                 {this.drawDspButton(0, 30, 1)}
                 <line x1={120} y1={30} x2={160} y2={30}/>
 

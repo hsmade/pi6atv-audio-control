@@ -1,10 +1,31 @@
+body, html {
+    height: 100%;
+    display: grid;
+}
+
 div {
-    display:flex; justify-content:center;
+    display:flex;
+    justify-content:center;
+    align-items: center;
+    height: 100%;
+}
+
+svg {
+    margin: 0 auto;
+    display: block;
+    position: absolute;
+    height: 80%;
+    min-height: 600px;
 }
 
 @media only screen
 and (max-device-width: 751px) {
     div {
      display:block; justify-content:center;
+    }
+
+    svg {
+        position: absolute;
+        height: 100%;
     }
 }
