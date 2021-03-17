@@ -71,7 +71,9 @@ func (c *Control) ControlSetRelay(w http.ResponseWriter, r *http.Request) {
 	result := c.pca.Set(port, state)
 
 	w.WriteHeader(200)
-	_ = json.NewEncoder(w).Encode(result)
+	_ = json.NewEncoder(w).Encode(struct {
+		error error
+	}{error: result})
 }
 
 func (c *Control) ControlCheck(w http.ResponseWriter, r *http.Request) {

@@ -4,8 +4,8 @@ server {
     root /opt/repeater-audio-control/frontend/;
     index index.html index.htm index.nginx-debian.html;
     server_name _;
-    location /api { proxy_pass http://127.0.0.1:5000; }
-    location /metrics { proxy_pass http://127.0.0.1:5000; }
+    location /control { proxy_pass http://127.0.0.1:8001/control; }
+    location /metrics { proxy_pass http://127.0.0.1:8001/metrics; }
     location / {
         try_files $uri $uri/ =404;
     }

@@ -10,8 +10,8 @@ build-deps:
 
 frontend/build:
 	cd frontend; \
-	yarn install; \
-	yarn build
+	npm install; \
+	npm run build
 
 build/DEBIAN/changelog:
 	cd build; \
@@ -20,7 +20,7 @@ build/DEBIAN/changelog:
 	pkgname=`cat DEBIAN/control | grep '^Package: ' | sed 's/^Package: //'`; \
 	git tag -l v* | sort -V | while read tag; do \
 	(echo "$$pkgname ($${tag#v}) unstable; urgency=low\n"; git log --pretty=format:'  * %s' $$prevtag..$$tag; \
-	  git log --pretty='format:%n%n -- %aN <%aE>  %aD%n%n' $$tag^..$$tag) | cat - DEBIAN/changelog | sponge DEBIAN/changelog; \
+	  git log --pretty='format:%n%n co-- %aN <%aE>  %aD%n%n' $$tag^..$$tag) | cat - DEBIAN/changelog | sponge DEBIAN/changelog; \
 	prevtag=$$tag; \
 	done; \
 	tag=`git tag -l v* | sort -V | tail -1`; \
@@ -44,4 +44,4 @@ build-package: prepare-package
 	cp repeater-audio-control-$(VERSION).deb repeater-audio-control.deb
 
 clean:
-	rm -r build/DEBIAN/changelog build/opt frontend/build
+	rm -rf build/DEBIAN/changelog build/opt frontend/build backend/backend

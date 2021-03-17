@@ -16,17 +16,27 @@ export default class Diagram extends React.Component {
     }
 
     async fetchPorts() {
-        const res = await fetch(api);
-        const data = await res.json();
-        this.setState({ports: data})
+        fetch(api)
+            .then((resp) => {
+                    resp.json()
+                        .then((data) => this.setState({ports: data}))
+                        .catch((e) => console.log("failed to parse json:",e))
+                })
+            .catch((e) => console.log("failed to do request:", api, e))
     }
 
     async setPort(port, state) {
-        const res = await fetch(api + "/" + port + "/" + state, {method: "POST"});
-        const data = await res.json();
-        if (res.error() || data !== {}) {
-            console.log("setPort failed for port:", port, "state:", state, "error:", res.error(), "response:", data)
-        }
+        const url = api + port + "/" + state
+        fetch(url, {method: "POST"})
+            .then((resp) => {
+                resp.json()
+                    .then((data) => {
+                        if (data === null || data['error'] !== "") {
+                            console.log("set port error:", data)
+                        }
+                    })
+            })
+            .catch((e) => console.log("failed to do post request:", url, e))
         await this.fetchPorts()
     }
 
