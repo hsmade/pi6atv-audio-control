@@ -1,0 +1,9 @@
+export const stroke = "#41719c"
+export const fill = "#5b9bd5"
+export const red = "#d55b5b"
+export const orange = "#d59b5b"
+export const green = "#5bb59b"
+export const api = "control-example.json"
+// export const api = "/control/"
+export const resetDuration = 1000
+export const resetWaitDuration = 1000
