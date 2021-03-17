@@ -166,7 +166,7 @@ export default class Diagram extends React.Component {
 
     render() {
         return (
-            <svg width="1012" height="763">
+            <svg viewBox={"0 0 1012 763"} style={{position: "absolute", height: "100%"}}>
                 {this.drawDspButton(0, 30, 1)}
                 <line x1={120} y1={30} x2={160} y2={30}/>
 
