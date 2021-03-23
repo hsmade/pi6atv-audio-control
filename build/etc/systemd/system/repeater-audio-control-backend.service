@@ -2,7 +2,7 @@
 Description=repeater audio control
 
 [Service]
-ExecStart=/opt/repeater-audio-control/backend
+ExecStart=/opt/repeater-audio-control/backend -config ./config.json
 WorkingDirectory=/opt/repeater-audio-control
 Restart=always
 

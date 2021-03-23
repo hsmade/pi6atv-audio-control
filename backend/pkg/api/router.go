@@ -7,8 +7,8 @@ import (
 )
 
 // NewRouter initialises the control and sensors objects and creates the http router to reach them
-func NewRouter(config config.Config) (*mux.Router, error) {
-	control, err := NewControl()
+func NewRouter(config *config.Config) (*mux.Router, error) {
+	control, err := NewControl(config.Backend.Pca.Address, config.Backend.Pca.Filename)
 	if err != nil {
 		return nil, errors.Wrap(err, "initialising control")
 	}

@@ -5,7 +5,7 @@
    * state
    * http 
  * control
-  * read config from json <- device address, bus, filename
+  * ~~read config from json <- device address, bus, filename~~
   * ~~pca module~~
   * pca check / ident
   * ~~read state on init~~

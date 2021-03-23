@@ -1,7 +1,8 @@
 {
   "backend": {
     "pca": {
-      "address": 20
+      "address": 20,
+      "filename": "persist.json"
     }
   },
   "frontend" : {

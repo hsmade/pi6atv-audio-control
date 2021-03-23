@@ -1,17 +1,25 @@
 package main
 
 import (
+	"flag"
 	"github.com/hsmade/pi6atv-audio-control/backend/pkg/api"
 	"github.com/hsmade/pi6atv-audio-control/backend/pkg/config"
 	"github.com/sirupsen/logrus"
 	"net/http"
-	"periph.io/x/periph/host"
 )
 
+var (
+	configFile = flag.String("config", "", "the path to the config file")
+)
 func main() {
 	logrus.SetLevel(logrus.DebugLevel)
-	host.Init()
-	router, err := api.NewRouter(config.Config{})
+	flag.Parse()
+	//host.Init()
+	c, err := config.NewConfig(*configFile)
+	if err != nil {
+		logrus.Fatal(err)
+	}
+	router, err := api.NewRouter(c)
 	if err != nil {
 		logrus.Fatal(err)
 	}
