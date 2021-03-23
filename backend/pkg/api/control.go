@@ -17,7 +17,7 @@ type Control struct {
 
 // NewControl takes a config and creates a new Control object
 func NewControl() (*Control, error) {
-	pca, err := pca9671.NewPCA9671(0x20) // FIXME
+	pca, err := pca9671.NewPCA9671(0x20, "dump.json") // FIXME
 	if err != nil {
 		return nil, errors.Wrap(err, "initialising new Control object")
 	}

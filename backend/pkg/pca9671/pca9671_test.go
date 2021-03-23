@@ -2,7 +2,11 @@ package pca9671
 
 import (
 	"bytes"
+	"encoding/json"
 	"github.com/sirupsen/logrus"
+	"io/ioutil"
+	"os"
+	"periph.io/x/conn/v3/i2c"
 	"reflect"
 	"sync"
 	"testing"
@@ -29,29 +33,48 @@ func (f *fakeI2CDevice) Tx(w []byte, r []byte) error {
 	return nil
 }
 
+func TestMain(m *testing.M) {
+	logrus.SetLevel(logrus.DebugLevel)
+	code := m.Run()
+	os.Exit(code)
+}
+
 // TODO
 func TestNewPCA9671(t *testing.T) {
-	type args struct {
-		address uint16
-	}
 	tests := []struct {
-		name    string
-		args    args
-		want    *PCA9671
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
+		name         string
+		wantState    [2]byte
+		wantErr      bool
+		haveFile     bool
+		fileContents []byte
+	}{}
 	for _, tt := range tests {
+		tmpfile, err := ioutil.TempFile("", "example")
+		if err != nil {
+			t.Error(err)
+		}
+
+		if tt.fileContents != nil || tt.haveFile {
+			_, err := tmpfile.Write(tt.fileContents)
+			if err != nil {
+				t.Error(err)
+			}
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewPCA9671(tt.args.address)
+			got, err := NewPCA9671(0x00, tmpfile.Name())
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewPCA9671() error = %v, wantErr %v", err, tt.wantErr)
+				_ = os.Remove(tmpfile.Name())
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewPCA9671() got = %v, want %v", got, tt.want)
+			//if !reflect.DeepEqual(got, tt.want) {
+			//	t.Errorf("NewPCA9671() got = %v, want %v", got, tt.want)
+			//}
+			if !reflect.DeepEqual(got.state, tt.wantState) {
+				t.Errorf("NewPCA9671() got state = %v, want %v", got, tt.wantState)
 			}
+			_ = os.Remove(tmpfile.Name())
 		})
 	}
 }
@@ -225,12 +248,18 @@ func TestPCA9671_Set(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			tmpfile, err := ioutil.TempFile("", "example")
+			if err != nil {
+				t.Error(err)
+			}
+
 			p := &PCA9671{
-				state:   tt.fields.state,
-				device:  tt.fields.device,
-				address: tt.fields.address,
-				logger:  logrus.WithField("foo", "bar"),
-				lock:    tt.fields.lock,
+				state:    tt.fields.state,
+				device:   tt.fields.device,
+				address:  tt.fields.address,
+				logger:   logrus.WithField("foo", "bar"),
+				lock:     tt.fields.lock,
+				filename: tmpfile.Name(),
 			}
 			if err := p.Set(tt.args.port, tt.args.state); (err != nil) != tt.wantErr {
 				t.Errorf("Set() error = %v, wantErr %v", err, tt.wantErr)
@@ -241,6 +270,7 @@ func TestPCA9671_Set(t *testing.T) {
 				t.Logf("want: %v, %d, %#b", tt.want, len(tt.want), tt.want)
 				t.Errorf("written state=%#b, want=%#b", got, tt.want)
 			}
+			_ = os.Remove(tmpfile.Name())
 		})
 	}
 }
@@ -283,12 +313,18 @@ func TestPCA9671_SetAll(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			tmpfile, err := ioutil.TempFile("", "example")
+			if err != nil {
+				t.Error(err)
+			}
+
 			p := &PCA9671{
-				state:   tt.fields.state,
-				device:  tt.fields.device,
-				address: tt.fields.address,
-				logger:  logrus.WithField("foo", "bar"),
-				lock:    tt.fields.lock,
+				state:    tt.fields.state,
+				device:   tt.fields.device,
+				address:  tt.fields.address,
+				logger:   logrus.WithField("foo", "bar"),
+				lock:     tt.fields.lock,
+				filename: tmpfile.Name(),
 			}
 			if err := p.SetAll(tt.args.state); (err != nil) != tt.wantErr {
 				t.Errorf("SetAll() error = %v, wantErr %v", err, tt.wantErr)
@@ -299,6 +335,7 @@ func TestPCA9671_SetAll(t *testing.T) {
 				t.Logf("want: %v, %d, %#b", tt.want, len(tt.want), tt.want)
 				t.Errorf("written state=%#b, want=%#b", got, tt.want)
 			}
+			_ = os.Remove(tmpfile.Name())
 		})
 	}
 }
@@ -331,12 +368,18 @@ func TestPCA9671_writeState(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			tmpfile, err := ioutil.TempFile("", "example")
+			if err != nil {
+				t.Error(err)
+			}
+
 			p := &PCA9671{
-				state:   tt.fields.state,
-				device:  tt.fields.device,
-				address: tt.fields.address,
-				logger:  logrus.WithField("foo", "bar"),
-				lock:    tt.fields.lock,
+				state:    tt.fields.state,
+				device:   tt.fields.device,
+				address:  tt.fields.address,
+				logger:   logrus.WithField("foo", "bar"),
+				lock:     &sync.Mutex{},
+				filename: tmpfile.Name(),
 			}
 			if err := p.writeState(); (err != nil) != tt.wantErr {
 				t.Errorf("writeState() error = %v, wantErr %v", err, tt.wantErr)
@@ -347,6 +390,7 @@ func TestPCA9671_writeState(t *testing.T) {
 					t.Errorf("written state=%#b, want=%#b", got, tt.want)
 				}
 			}
+			_ = os.Remove(tmpfile.Name())
 		})
 	}
 }
@@ -569,6 +613,176 @@ func Test_setBit(t *testing.T) {
 			if got := setBit(tt.args.store, tt.args.port, tt.args.state); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("setBit() = %v, want %v", got, tt.want)
 			}
+		})
+	}
+}
+
+func TestPCA9671_restoreDump(t *testing.T) {
+	type fields struct {
+		state    [2]byte
+		device   I2CWriter
+		bus      i2c.BusCloser
+		address  uint16
+		logger   *logrus.Entry
+		lock     sync.Locker
+		filename string
+	}
+	tests := []struct {
+		name         string
+		fields       fields
+		wantErr      bool
+		haveFile     bool
+		fileContents []byte
+		filename     string
+		wantState    [2]byte
+	}{
+		{
+			name:         "empty file",
+			wantErr:      true,
+			wantState:    [2]byte{0b00000000, 0b00000000},
+			fileContents: nil,
+			haveFile:     true,
+		},
+		{
+			name:      "nonexistent file",
+			wantErr:   false,
+			wantState: [2]byte{0b00000000, 0b00000000},
+			haveFile:  false,
+			filename:  "non-existent",
+			fields:    fields{device: &fakeI2CDevice{}},
+		},
+		{
+			name:      "valid json file",
+			wantErr:   false,
+			wantState: [2]byte{0b01010001, 0b11010101},
+			fileContents: []byte(`
+				{
+				  "0": true,
+				  "1": false,
+				  "2": false,
+				  "3": false,
+				  "4": true,
+				  "5": false,
+				  "6": true,
+				  "7": false,
+				  "10": true,
+				  "11": false,
+				  "12": true,
+				  "13": false,
+				  "14": true,
+				  "15": false,
+				  "16": true,
+				  "17": true
+						}
+			`),
+			haveFile: true,
+			fields:   fields{device: &fakeI2CDevice{}},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.haveFile {
+				tmpfile, err := ioutil.TempFile("", "example")
+				if err != nil {
+					t.Error(err)
+				}
+				tt.filename = tmpfile.Name()
+
+				if tt.fileContents != nil {
+					_, _ = tmpfile.Write(tt.fileContents)
+				}
+			}
+
+			p := &PCA9671{
+				state:    tt.fields.state,
+				device:   tt.fields.device,
+				bus:      tt.fields.bus,
+				address:  tt.fields.address,
+				logger:   logrus.WithField("foo", "bar"),
+				lock:     &sync.Mutex{},
+				filename: tt.filename,
+			}
+			if err := p.restoreDump(); (err != nil) != tt.wantErr {
+				t.Errorf("restoreDump() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if !reflect.DeepEqual(p.state, tt.wantState) {
+				t.Errorf("restoreDump() state = %#b, want %#b", p.state, tt.wantState)
+			}
+			_ = os.Remove(tt.filename)
+		})
+	}
+}
+
+func TestPCA9671_storeDump(t *testing.T) {
+	type fields struct {
+		state    [2]byte
+		device   I2CWriter
+		bus      i2c.BusCloser
+		address  uint16
+		logger   *logrus.Entry
+		lock     sync.Locker
+		filename string
+	}
+	tests := []struct {
+		name     string
+		fields   fields
+		wantErr  bool
+		wantFile map[int]bool
+	}{
+		{
+			name: "valid data",
+			fields: fields{
+				state:  [2]byte{0b01010111, 0b11010101},
+				logger: logrus.WithField("foo", "bar"),
+				lock:   &sync.Mutex{},
+			},
+			wantErr: false,
+			wantFile: map[int]bool{0: true, 1: true, 2: true, 3: false, 4: true, 5: false, 6: true, 7: false,
+				10: true, 11: false, 12: true, 13: false, 14: true, 15: false, 16: true, 17: true},
+		},
+		{
+			name: "invalid file path",
+			fields: fields{
+				state:    [2]byte{0b01010111, 0b11010101},
+				logger:   logrus.WithField("foo", "bar"),
+				lock:     &sync.Mutex{},
+				filename: "/dev/no/such/file",
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := &PCA9671{
+				state:    tt.fields.state,
+				device:   tt.fields.device,
+				bus:      tt.fields.bus,
+				address:  tt.fields.address,
+				logger:   tt.fields.logger,
+				lock:     tt.fields.lock,
+				filename: tt.fields.filename,
+			}
+
+			if p.filename == "" {
+				tmpfile, err := ioutil.TempFile("", "example")
+				if err != nil {
+					t.Error(err)
+				}
+				p.filename = tmpfile.Name()
+			}
+			if err := p.storeDump(); (err != nil) != tt.wantErr {
+				t.Errorf("storeDump() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			contents, err := ioutil.ReadFile(p.filename)
+			if err != nil {
+				t.Logf("failed to read tempfile %s: %v", p.filename, err)
+			}
+			var data map[int]bool
+			_ = json.Unmarshal(contents, &data)
+			if !reflect.DeepEqual(data, tt.wantFile) {
+				t.Errorf("storeDump() file contents = \n\t%v, want \n\t%v", data, tt.wantFile)
+			}
+			_ = os.Remove(p.filename)
 		})
 	}
 }

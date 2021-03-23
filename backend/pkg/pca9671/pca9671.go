@@ -1,9 +1,12 @@
 package pca9671
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"io/ioutil"
+	"os"
 	"periph.io/x/conn/v3/i2c"
 	"periph.io/x/conn/v3/i2c/i2creg"
 	"periph.io/x/host/v3"
@@ -18,16 +21,17 @@ type I2CWriter interface {
 // PCA9671 describes the PCA9671 IC
 // This is an I2C port multiplexer. It has 16 ports, named P00 - P07 and P10 - P17
 type PCA9671 struct {
-	state   [2]byte
-	device  I2CWriter
-	bus     i2c.BusCloser
-	address uint16
-	logger  *logrus.Entry
-	lock    sync.Locker
+	state    [2]byte
+	device   I2CWriter
+	bus      i2c.BusCloser
+	address  uint16
+	logger   *logrus.Entry
+	lock     sync.Locker
+	filename string
 }
 
 // NewPCA9671 creates a new PCA9671 object using address as I2C address
-func NewPCA9671(address uint16) (*PCA9671, error) {
+func NewPCA9671(address uint16, filename string) (*PCA9671, error) {
 	p := PCA9671{
 		address: address,
 		state:   [2]byte{0x00, 0x00}, // P07 P06 P05 P04 P03 P02 P01 P00, P17 P16 P15 P14 P13 P12 P11 P10
@@ -35,7 +39,8 @@ func NewPCA9671(address uint16) (*PCA9671, error) {
 			"address": fmt.Sprintf("%x", address),
 			"package": "pca9671",
 		}),
-		lock: &sync.Mutex{},
+		lock:     &sync.Mutex{},
+		filename: filename,
 	}
 
 	if _, err := host.Init(); err != nil {
@@ -48,14 +53,54 @@ func NewPCA9671(address uint16) (*PCA9671, error) {
 	}
 	p.bus = b
 	p.device = &i2c.Dev{Addr: address, Bus: b}
-	//return &p, p.Check()
-	//return &p, nil
-	err = p.readState() // set all to the actual state
-	return &p, err
+
+	err = p.restoreDump() // restore the previous known state
+	return &p, err        // FIXME: return p.Check()
 }
 
 func (p *PCA9671) Close() error {
 	return p.bus.Close()
+}
+
+// restoreDump reads the json file containing the state, written by storeDump
+func (p *PCA9671) restoreDump() error {
+	p.logger.WithField("func", "restoreDump").Debugf("restoring state from '%v'", p.filename)
+
+	file, err := ioutil.ReadFile(p.filename)
+	if os.IsNotExist(err) {
+		// file doesn't exist, so we don't attempt to read it
+		p.logger.WithField("func", "restoreDump").Debugf("file '%v' does not exist, not restoring anything", p.filename)
+		return p.writeState()
+	}
+
+	if err != nil {
+		return errors.Wrap(err, "opening data dump")
+	}
+
+	var stateMap map[int]bool
+	err = json.Unmarshal(file, &stateMap)
+	if err != nil {
+		return errors.Wrap(err, "parsing data dump")
+	}
+
+	err = p.SetAll(stateMap)
+	return errors.Wrap(err, "setting state from data dump")
+}
+
+// storeDump dumps the current state to the json file
+func (p *PCA9671) storeDump() error {
+	p.logger.WithField("func", "storeDump").Debugf("dumping state to '%v'", p.filename)
+	file, err := json.MarshalIndent(p.GetAll(), "", " ")
+	if err != nil {
+		return errors.Wrap(err, "dumping state to json")
+	}
+
+	p.logger.WithField("func", "storeDump").Debugf("dumping state '%s'", file)
+	err = ioutil.WriteFile(p.filename, file, 0644)
+	if err != nil {
+		return errors.Wrap(err, "writing json file")
+	}
+	return nil
 }
 
 // Check polls the device to see that it's connected
@@ -96,10 +141,10 @@ func (p *PCA9671) GetAll() map[int]bool {
 // SetAll sets the state of all ports
 func (p *PCA9671) SetAll(state map[int]bool) error {
 	p.lock.Lock()
-	defer p.lock.Unlock()
 	for i, isSet := range state {
 		p.state = setBit(p.state, i, isSet)
 	}
+	p.lock.Unlock()
 	return p.writeState()
 }
 
@@ -112,7 +157,8 @@ func (p *PCA9671) writeState() error {
 	if err != nil {
 		return errors.Wrap(err, "writing to device")
 	}
-	return nil
+
+	return p.storeDump()
 }
 
 func (p *PCA9671) readState() error {
@@ -137,8 +183,8 @@ func (p *PCA9671) Get(port int) (bool, error) {
 // Set sets the state of the requested port
 func (p *PCA9671) Set(port int, state bool) error {
 	p.lock.Lock()
-	defer p.lock.Unlock()
 	p.state = setBit(p.state, port, state)
+	p.lock.Unlock()
 	return p.writeState()
 }
 
