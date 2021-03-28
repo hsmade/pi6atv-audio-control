@@ -19,6 +19,7 @@ func main() {
 	if err != nil {
 		logrus.Fatal(err)
 	}
+	logrus.Infof("config: %v", c)
 	router, err := api.NewRouter(c)
 	if err != nil {
 		logrus.Fatal(err)
