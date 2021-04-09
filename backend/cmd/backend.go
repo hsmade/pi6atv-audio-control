@@ -10,11 +10,15 @@ import (
 
 var (
 	configFile = flag.String("config", "", "the path to the config file")
+	verbose = flag.Bool("verbose", false, "enable verbose mode")
 )
 func main() {
-	logrus.SetLevel(logrus.DebugLevel)
 	flag.Parse()
-	//host.Init()
+
+	if *verbose {
+		logrus.SetLevel(logrus.DebugLevel)
+	}
+
 	c, err := config.NewConfig(*configFile)
 	if err != nil {
 		logrus.Fatal(err)

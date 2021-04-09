@@ -1,0 +1,3 @@
+FROM ubuntu
+RUN apt update && apt install -y nodejs make software-properties-common npm
+RUN add-apt-repository ppa:longsleep/golang-backports && apt update && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys F6BC817356A3D45E && apt install golang-go

@@ -21,6 +21,7 @@
  * ~~read config from json~~
  * ~~scaling~~
  * ~~pressing on an activated DSP should deactivate it~~
+ * add "active" / "inactive" to audio carriers
 
 ## snmp
  * change json file location to persist.json
