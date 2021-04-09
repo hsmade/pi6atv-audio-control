@@ -173,7 +173,6 @@ export default class Diagram extends React.Component {
         return (
             <RoundedRect
                 x={x} y={y}
-                // text={text + " " + (this.carrierColor(port)===green?"Active":"Inactive")}
                 text={[
                     <tspan x={60} y={20}>{text}</tspan>,
                     <tspan x={60} y={40}>{this.carrierColor(port)===green?"Active":"Inactive"}</tspan>
