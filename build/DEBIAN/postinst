@@ -32,15 +32,9 @@ case "$1" in
       echo "(re)Starting services"
       systemctl daemon-reload
       systemctl restart repeater-audio-control-backend
+      systemctl enable repeater-audio-control-backend.service
       systemctl reload nginx
       systemctl restart snmpd
-
-      if ! grep -q 'dtoverlay=dht11,gpiopin=16' /boot/config.txt
-      then
-        echo "adding dht11 dtoverlay, if it's not there yet"
-        echo 'dtoverlay=dht11,gpiopin=16' >> /boot/config.txt
-        echo PLEASE REBOOT
-      fi
 
       if ! grep -q "tmpfs	/var/log" /etc/fstab
       then

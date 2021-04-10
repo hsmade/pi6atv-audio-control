@@ -9,8 +9,10 @@ PP = snmp.PassPersist(".1.3.6.1.4.1.8072.2.255")
 
 
 def update():
-    with open("/dev/shm/sensors.json", "r") as sensors_file:
+    with open("/opt/repeater-audio-control/persist.json", "r") as sensors_file:
         data = json.load(sensors_file)
+
+
     index = 0
     for sensor in data:
         index += 1

@@ -11,7 +11,7 @@
   * ~~read state on init~~
   * ~~persist state to disk on changes -> persist.json~~
   * ~~read state from disk on init <- persist.json~~
-  * needs to start at boot
+  * ~~needs to start at boot~~
 
 ## frontend
  * ~~diagram~~
