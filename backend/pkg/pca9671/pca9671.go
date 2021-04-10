@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
@@ -18,6 +19,24 @@ type I2CWriter interface {
 	Tx(w, r []byte) error
 }
 
+var labels = map[int]string{
+0: "DSP 1",
+1: "DSP 2",
+2: "DSP 3",
+3: "DSP 4",
+4: "DSP 5",
+5: "program",
+6: "reset",
+7: "carrier 7.02",
+10: "carrier 7.20",
+11: "carrier 7.38",
+12: "carrier 7.56",
+13: "carrier 7.74",
+14: "carrier 7.92",
+15: "carrier nicam 5.85",
+16: "carrier nicam 6.552",
+}
+
 // PCA9671 describes the PCA9671 IC
 // This is an I2C port multiplexer. It has 16 ports, named P00 - P07 and P10 - P17
 type PCA9671 struct {
@@ -28,6 +47,7 @@ type PCA9671 struct {
 	logger   *logrus.Entry
 	lock     sync.Locker
 	filename string
+	metric   *prometheus.GaugeVec
 }
 
 // NewPCA9671 creates a new PCA9671 object using address as I2C address
@@ -42,6 +62,15 @@ func NewPCA9671(address uint16, filename string) (*PCA9671, error) {
 		lock:     &sync.Mutex{},
 		filename: filename,
 	}
+
+	p.metric = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "control_port_status",
+			Help: "The state of the control port",
+		},
+		[]string{"port", "label"},
+		)
+	prometheus.MustRegister(p.metric)
 
 	if _, err := host.Init(); err != nil {
 		p.logger.WithError(err).Fatal("registering I2C")
@@ -60,6 +89,20 @@ func NewPCA9671(address uint16, filename string) (*PCA9671, error) {
 
 func (p *PCA9671) Close() error {
 	return p.bus.Close()
+}
+
+// setMetrics updates the prometheus metrics
+func (p *PCA9671) setMetrics() {
+	if p.metric == nil {
+		return // for running the tests
+	}
+	for port, state := range p.GetAll() {
+		value := 0
+		if state {
+			value = 1
+		}
+		p.metric.WithLabelValues(fmt.Sprintf("%d", port), labels[port]).Set(float64(value))
+	}
 }
 
 // restoreDump reads the json file containing the state, written by storeDump
@@ -84,12 +127,14 @@ func (p *PCA9671) restoreDump() error {
 	}
 
 	err = p.SetAll(stateMap)
+	p.setMetrics()
 	return errors.Wrap(err, "setting state from data dump")
 }
 
 // storeDump dumps the current state to the json file
 func (p *PCA9671) storeDump() error {
 	p.logger.WithField("func", "storeDump").Debugf("dumping state to '%v'", p.filename)
+	p.setMetrics()
 	file, err := json.MarshalIndent(p.GetAll(), "", " ")
 	if err != nil {
 		return errors.Wrap(err, "dumping state to json")

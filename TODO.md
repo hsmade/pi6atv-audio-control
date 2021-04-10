@@ -2,7 +2,7 @@
 ## backend
  * ~~api framework~~
  * metrics
-   * state
+   * ~~state~~
    * http 
  * control
   * ~~read config from json <- device address, bus, filename~~
