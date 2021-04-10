@@ -170,13 +170,14 @@ export default class Diagram extends React.Component {
     }
 
     drawCarrierButton(x, y, port, text) {
+        const textContent = [
+                            <tspan x={60} y={20}>{text}</tspan>,
+                            <tspan x={60} y={40}>{this.carrierColor(port)===green?"Active":"Inactive"}</tspan>
+        ]
         return (
             <RoundedRect
                 x={x} y={y}
-                text={[
-                    <tspan x={60} y={20}>{text}</tspan>,
-                    <tspan x={60} y={40}>{this.carrierColor(port)===green?"Active":"Inactive"}</tspan>
-                ]}
+                text={textContent}
                 color={this.carrierColor(port)}
                 clickHandler={this.toggleCarrier.bind(this)} clickValue={port}
             />

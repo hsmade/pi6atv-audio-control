@@ -25,5 +25,5 @@
  * ~~add "active" / "inactive" to audio carriers~~
 
 ## snmp
- * change json file location to persist.json
-    * only carriers
+ * ~~change json file location to persist.json~~
+    * ~~only carriers~~

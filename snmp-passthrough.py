@@ -6,55 +6,36 @@ import snmp_passpersist as snmp
 import json
 
 PP = snmp.PassPersist(".1.3.6.1.4.1.8072.2.255")
+ports = {
+    '0': "DSP 1",
+    '1': "DSP 2",
+    '2': "DSP 3",
+    '3': "DSP 4",
+    '4': "DSP 5",
+    '5': "program",
+    '6': "reset",
+    '7': "carrier 7.02",
+    '10': "carrier 7.20",
+    '11': "carrier 7.38",
+    '12': "carrier 7.56",
+    '13': "carrier 7.74",
+    '14': "carrier 7.92",
+    '15': "carrier nicam 5.85",
+    '16': "carrier nicam 6.552",
+}
 
 
 def update():
     with open("/opt/repeater-audio-control/persist.json", "r") as sensors_file:
         data = json.load(sensors_file)
 
-
-    index = 0
-    for sensor in data:
-        index += 1
-        if sensor.get("type") in ["status", "reverse_status"]:
-            PP.add_int("0.{}".format(index), 1 if sensor.get("value") else 0, sensor.get("name"))
-            PP.add_str("1.{}".format(index), sensor.get("name"))
-            continue
-        if sensor.get("type") in ["flow"]:
-            PP.add_int("0.{}".format(index), sensor.get("value", -128) * 1000, sensor.get("name"))
-            PP.add_str("1.{}".format(index), sensor.get("name"))
-            continue
-        if sensor.get("type") in ["rpm", "temperature", "pa_power"]:
-            PP.add_int("0.{}".format(index), sensor.get("value", -128), sensor.get("name"))
-            PP.add_str("1.{}".format(index), sensor.get("name"))
-            continue
-        if sensor.get("type") == "temp_fan":
-            PP.add_str("1.{}".format(index), sensor.get("name"))
-            PP.add_int("0.{}.0".format(index), sensor.get("value", {}).get("temp", -128) * 1000, "{}:{}".format(sensor.get("name"), "cpu-temp"))
-            PP.add_str("1.{}.0".format(index), "cpu-temp")
-            PP.add_int("0.{}.1".format(index), sensor.get("value", {}).get("fan", -1), "{}:{}".format(sensor.get("name"), "fan-status"))
-            PP.add_str("1.{}.1".format(index), "fan-status")
-            continue
-        if sensor.get("type") == "dht22":
-            PP.add_str("1.{}".format(index), sensor.get("name"))
-            PP.add_int("0.{}.0".format(index), sensor.get("value", {}).get("temperature", -128) * 1000, "{}:{}".format(sensor.get("name"), "temperature"))
-            PP.add_str("1.{}.0".format(index), "temperature")
-            PP.add_int("0.{}.1".format(index), sensor.get("value", {}).get("humidity", -128) * 1000, "{}:{}".format(sensor.get("name"), "humidity"))
-            PP.add_str("1.{}.1".format(index), "humidity")
-            continue
-        if sensor.get("type") == "power":
-            PP.add_str("1.{}".format(index), sensor.get("name"))
-            PP.add_int("0.{}.0".format(index), sensor.get("value", {}).get("power", -1) * 1000, "{}:{}".format(sensor.get("name"), "power"))
-            PP.add_str("1.{}.0".format(index), "power")
-            PP.add_int("0.{}.1".format(index), sensor.get("value", {}).get("current", -1) * 1000, "{}:{}".format(sensor.get("name"), "current"))
-            PP.add_str("1.{}.1".format(index), "current")
-            PP.add_int("0.{}.2".format(index), sensor.get("value", {}).get("voltage", -1) * 1000, "{}:{}".format(sensor.get("name"), "voltage"))
-            PP.add_str("1.{}.2".format(index), "voltage")
-            continue
+    for port, name in ports.items():
+        PP.add_int("0.{}".format(port), (0, 1)[data[port]])
+        PP.add_str("1.{}".format(port), name)
 
 
 def main():
-    PP.start(update, 30)
+    PP.start(update, 1)
     PP.debug = True
 
 
