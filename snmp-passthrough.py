@@ -3,7 +3,7 @@ Connects to the local web server and queries the API for metrics.
 This is then converted in to a format that the SNMP agent expects
 """
 import snmp_passpersist as snmp
-import json
+import requests
 
 PP = snmp.PassPersist(".1.3.6.1.4.1.8072.2.255")
 ports = {
@@ -26,12 +26,16 @@ ports = {
 
 
 def update():
-    with open("/opt/repeater-audio-control/persist.json", "r") as sensors_file:
-        data = json.load(sensors_file)
-
-    for port, name in ports.items():
-        PP.add_int("0.{}".format(port), (0, 1)[data[port]])
-        PP.add_str("1.{}".format(port), name)
+    PP.add_str("1.255", "error")
+    try:
+        data = requests.get("http://localhost/control/").json()
+    except:
+        PP.add_int("0.255", 1)
+    else:
+        PP.add_int("0.255", 0)
+        for port, name in ports.items():
+            PP.add_int("0.{}".format(port), (0, 1)[data[port]])
+            PP.add_str("1.{}".format(port), name)
 
 
 def main():

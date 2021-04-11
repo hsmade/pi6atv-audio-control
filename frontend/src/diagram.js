@@ -12,17 +12,28 @@ export default class Diagram extends React.Component {
             program: false,
             reset: false,
             resetButton: false,
+            error: false,
         };
     }
 
     async fetchPorts() {
         fetch(api)
             .then((resp) => {
+                // console.log("RESPONSE:", resp)
+                if(!resp.ok) throw new Error(`backend returned: ${resp.status}`)
                     resp.json()
-                        .then((data) => this.setState({ports: data}))
-                        .catch((e) => console.log("failed to parse json:",e))
+                        .then((data) => {
+                            this.setState({ports: data, error: false})
+                        })
+                        .catch((e) => {
+                            console.log("failed to parse json, error:",e)
+                            this.setState({error: true})
+                        })
                 })
-            .catch((e) => console.log("failed to do request:", api, e))
+            .catch((e) => {
+                console.log("failed to do request:", api, e)
+                this.setState({error: true})
+            })
     }
 
     async setPort(port, state) {
@@ -171,8 +182,8 @@ export default class Diagram extends React.Component {
 
     drawCarrierButton(x, y, port, text) {
         const textContent = [
-                            <tspan x={60} y={20}>{text}</tspan>,
-                            <tspan x={60} y={40}>{this.carrierColor(port)===green?"Active":"Inactive"}</tspan>
+                            <tspan key={`${port}_name`} x={60} y={20}>{text}</tspan>,
+                            <tspan key={`${port}_state`} x={60} y={40}>{this.carrierColor(port)===green?"Active":"Inactive"}</tspan>
         ]
         return (
             <RoundedRect
@@ -185,8 +196,16 @@ export default class Diagram extends React.Component {
     }
 
     render() {
+        let error = <div/>
+        if (this.state.error) {
+            error = <text x={200} y={30} style={{fill: red, fontSize: "2em", fontWeight: "bold"}}>
+                Error connecting to controller or device
+            </text>
+        }
         return (
             <svg viewBox={"0 0 1012 763"}>
+                {error}
+
                 {this.drawDspButton(0, 30, 1)}
                 <line x1={120} y1={30} x2={160} y2={30}/>
 

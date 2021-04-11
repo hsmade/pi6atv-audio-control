@@ -19,24 +19,6 @@ type I2CWriter interface {
 	Tx(w, r []byte) error
 }
 
-var labels = map[int]string{
-0: "DSP 1",
-1: "DSP 2",
-2: "DSP 3",
-3: "DSP 4",
-4: "DSP 5",
-5: "program",
-6: "reset",
-7: "carrier 7.02",
-10: "carrier 7.20",
-11: "carrier 7.38",
-12: "carrier 7.56",
-13: "carrier 7.74",
-14: "carrier 7.92",
-15: "carrier nicam 5.85",
-16: "carrier nicam 6.552",
-}
-
 // PCA9671 describes the PCA9671 IC
 // This is an I2C port multiplexer. It has 16 ports, named P00 - P07 and P10 - P17
 type PCA9671 struct {
@@ -68,7 +50,7 @@ func NewPCA9671(address uint16, filename string) (*PCA9671, error) {
 			Name: "control_port_status",
 			Help: "The state of the control port",
 		},
-		[]string{"port", "label"},
+		[]string{"port"},
 		)
 	prometheus.MustRegister(p.metric)
 
@@ -101,7 +83,7 @@ func (p *PCA9671) setMetrics() {
 		if state {
 			value = 1
 		}
-		p.metric.WithLabelValues(fmt.Sprintf("%d", port), labels[port]).Set(float64(value))
+		p.metric.WithLabelValues(fmt.Sprintf("%d", port)).Set(float64(value))
 	}
 }
 
@@ -206,10 +188,10 @@ func (p *PCA9671) writeState() error {
 	return p.storeDump()
 }
 
-func (p *PCA9671) readState() error {
+func (p *PCA9671) ReadState() error {
 	data := make([]byte, 2)
 	err := p.device.Tx(nil, data)
-	p.logger.WithField("func", "readState").Debugf("data: %#b err: %v", data, err)
+	p.logger.WithField("func", "ReadState").Debugf("data: %#b err: %v", data, err)
 	result := [2]byte{data[0], data[1]}
 	if err == nil {
 		p.state = result
@@ -221,7 +203,7 @@ func (p *PCA9671) readState() error {
 func (p *PCA9671) Get(port int) (bool, error) {
 	p.lock.Lock()
 	defer p.lock.Unlock()
-	err := p.readState()
+	err := p.ReadState()
 	return getBit(p.state, port), errors.Wrap(err, "reading state")
 }
 

@@ -31,9 +31,14 @@ func (c *Control) ControlGetAll(w http.ResponseWriter, r *http.Request) {
 	logrus.Debugf("ControlGetAll called with %v", r.URL.Path)
 	w.Header().Set("Content-Type", "application/json")
 
+	err := c.pca.ReadState()
+	if err != nil {
+		w.WriteHeader(500)
+	} else {
+		w.WriteHeader(200)
+	}
 	state := c.pca.GetAll()
 
-	w.WriteHeader(200)
 	_ = json.NewEncoder(w).Encode(state)
 }
 
