@@ -22,14 +22,15 @@ type I2CWriter interface {
 // PCA9671 describes the PCA9671 IC
 // This is an I2C port multiplexer. It has 16 ports, named P00 - P07 and P10 - P17
 type PCA9671 struct {
-	state    [2]byte
-	device   I2CWriter
-	bus      i2c.BusCloser
-	address  uint16
-	logger   *logrus.Entry
-	lock     sync.Locker
-	filename string
-	metric   *prometheus.GaugeVec
+	state       [2]byte
+	device      I2CWriter
+	bus         i2c.BusCloser
+	address     uint16
+	logger      *logrus.Entry
+	lock        sync.Locker
+	filename    string
+	portMetric  *prometheus.GaugeVec
+	errorMetric prometheus.Gauge
 }
 
 // NewPCA9671 creates a new PCA9671 object using address as I2C address
@@ -45,14 +46,19 @@ func NewPCA9671(address uint16, filename string) (*PCA9671, error) {
 		filename: filename,
 	}
 
-	p.metric = prometheus.NewGaugeVec(
+	p.portMetric = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "control_port_status",
 			Help: "The state of the control port",
 		},
 		[]string{"port"},
-		)
-	prometheus.MustRegister(p.metric)
+	)
+	p.errorMetric = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Name: "control_port_error",
+			Help: "Bool for error state",
+		})
+	prometheus.MustRegister(p.portMetric, p.errorMetric)
 
 	if _, err := host.Init(); err != nil {
 		p.logger.WithError(err).Fatal("registering I2C")
@@ -75,7 +81,7 @@ func (p *PCA9671) Close() error {
 
 // setMetrics updates the prometheus metrics
 func (p *PCA9671) setMetrics() {
-	if p.metric == nil {
+	if p.portMetric == nil {
 		return // for running the tests
 	}
 	for port, state := range p.GetAll() {
@@ -83,7 +89,7 @@ func (p *PCA9671) setMetrics() {
 		if state {
 			value = 1
 		}
-		p.metric.WithLabelValues(fmt.Sprintf("%d", port)).Set(float64(value))
+		p.portMetric.WithLabelValues(fmt.Sprintf("%d", port)).Set(float64(value))
 	}
 }
 
@@ -188,6 +194,17 @@ func (p *PCA9671) writeState() error {
 	return p.storeDump()
 }
 
+// set the error metric, if we have it initialised
+func (p *PCA9671) setError(state bool) {
+	if p.errorMetric != nil {
+		if state {
+			p.errorMetric.Set(1)
+		} else {
+			p.errorMetric.Set(0)
+		}
+	}
+}
+
 func (p *PCA9671) ReadState() error {
 	data := make([]byte, 2)
 	err := p.device.Tx(nil, data)
@@ -195,7 +212,11 @@ func (p *PCA9671) ReadState() error {
 	result := [2]byte{data[0], data[1]}
 	if err == nil {
 		p.state = result
+		p.setError(false)
+	} else {
+		p.setError(true)
 	}
+
 	return errors.Wrap(err, "reading from device")
 }
 
