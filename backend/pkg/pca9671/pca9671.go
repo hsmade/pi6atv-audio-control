@@ -212,6 +212,7 @@ func (p *PCA9671) ReadState() error {
 	result := [2]byte{data[0], data[1]}
 	if err == nil {
 		p.state = result
+		p.setMetrics()
 		p.setError(false)
 	} else {
 		p.setError(true)
