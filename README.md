@@ -17,10 +17,10 @@ Configure snmpd with the following:
 
     pass_persist .1.3.6.1.4.1.8072.2.255 /opt/repeater-audio-control/venv/bin/python -u /opt/repeater-audio-control/snmp-passthrough.py
 
-### scraper
-This script reads out all the sensors and writes the result into a json file
+### backend
+Connects to the PCA and servers out the API and metrics
 
-    ./venv/bin/python scraper.py
+    /opt/repeater-audio-control/backend -config /opt/repeater-audio-control/config.json -verbose
 
 ### Website
 Install nginx and copy (`/etc/nginx/sites-enabled/default`) [default](build/etc/nginx/sites-enabled/default)
@@ -29,6 +29,9 @@ Install nginx and copy (`/etc/nginx/sites-enabled/default`) [default](build/etc/
 When changes have been done, they need to be compiled:
 
     cd frontend
-    yarn build
+    npm start
 
 Copy the build directory to /opt/repeater-audio-control/web
+
+### SNMP
+[example snmpd.conf](snmpd.conf)
