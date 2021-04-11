@@ -28,7 +28,10 @@ ports = {
 def update():
     PP.add_str("1.255", "error")
     try:
-        data = requests.get("http://localhost/control/").json()
+        resp = requests.get("http://localhost/control/")
+        if not resp.ok:
+            raise RuntimeError(resp.status_code)
+        data = resp.json()
     except:
         PP.add_int("0.255", 1)
     else:
@@ -39,7 +42,7 @@ def update():
 
 
 def main():
-    PP.start(update, 1)
+    PP.start(update, 10)
     PP.debug = True
 
 
