@@ -105,6 +105,7 @@ func (c *Control) CarrierSet(w http.ResponseWriter, r *http.Request) {
 		Error{Message: "failed to set PCA state", Error: err}.Send(w)
 	} else {
 		w.WriteHeader(200)
+		_,_ = w.Write([]byte("{}"))
 	}
 }
 
@@ -125,6 +126,7 @@ func (c *Control) ProgrammerSet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(200)
+	_,_ = w.Write([]byte("{}"))
 }
 
 func (c *Control) ControlCheck(w http.ResponseWriter, r *http.Request) {

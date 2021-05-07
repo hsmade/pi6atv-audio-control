@@ -24,7 +24,7 @@ export default class Diagram extends React.Component {
                 if(!resp.ok) throw new Error(`backend returned: ${resp.status}`)
                     resp.json()
                         .then((data) => {
-                            this.setState({ports: data['pca'], programmerSelected: data['tca'], error: false})
+                            this.setState({carrierPorts: data['Pca'], programmerSelected: data['Tca'], error: false})
                         })
                         .catch((e) => {
                             console.log("failed to parse json, error:",e)
@@ -77,7 +77,7 @@ export default class Diagram extends React.Component {
 
     dspColor(port) {
         let color = fill
-        if (this.state.ports[port] ) {
+        if (this.state.programmerSelected===port) {
             color = green
             if (this.state.program) {
                 color = red
@@ -90,12 +90,13 @@ export default class Diagram extends React.Component {
     }
 
     carrierColor(port) {
-        return this.state.ports[port]?green:red
+        if (this.state.carrierPorts===undefined) return '#606060'
+        return this.state.carrierPorts[port]?green:red
     }
 
     hasPortSelected() {
         for (let i=0; i<=5; i++) {
-            if (this.state.ports[i]) return true
+            if (this.state.carrierPorts[i]) return true
         }
         return false
     }
@@ -146,7 +147,7 @@ export default class Diagram extends React.Component {
         }
 
         // if port is already enabled, just disable it
-        if (this.state.ports[port]) {
+        if (this.state.programmerSelected===port) {
             await this.ProgrammerSetPort(255)
             return
         }
@@ -171,7 +172,7 @@ export default class Diagram extends React.Component {
     }
 
     async toggleCarrier(port) {
-        if (this.state.ports[port]) {
+        if (this.state.carrierPorts[port]) {
             console.log("Disable carrier", port)
             await this.disableCarrier(port)
         } else {
