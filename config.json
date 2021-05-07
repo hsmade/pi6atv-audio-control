@@ -3,6 +3,9 @@
     "pca": {
       "address": 32,
       "filename": "persist.json"
+    },
+    "tca": {
+      "address": 112
     }
   },
   "frontend" : {
