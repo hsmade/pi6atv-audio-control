@@ -53,7 +53,7 @@ func NewTCA9548a(address uint16) (*TCA9548a, error) {
 		t.logger.WithError(err).Fatal("registering I2C")
 	}
 
-	b, err := i2creg.Open("")
+	b, err := i2creg.Open("/dev/i2c-2")
 	if err != nil {
 		t.logger.WithError(err).Fatal("opening I2C bus")
 	}

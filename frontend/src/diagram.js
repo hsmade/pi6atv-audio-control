@@ -14,6 +14,7 @@ export default class Diagram extends React.Component {
             reset: false,
             resetButton: false,
             error: false,
+            showErrors: true,
         };
     }
 
@@ -105,12 +106,16 @@ export default class Diagram extends React.Component {
         if (this.state.program) {
             console.log("Disable program")
             await this.disableCarrier(5)
+            await this.enableTCA()
+            this.setState({showErrors: true})
         } else {
             if (!this.hasPortSelected()) {
                 console.log("Not enabling program as there is no active port")
                 return
             }
             console.log("Enable program")
+            await this.disableTCA()
+            this.setState({showErrors: false})
             await this.enableCarrier(5)
         }
         this.setState({program: !this.state.program})
@@ -135,11 +140,23 @@ export default class Diagram extends React.Component {
             setTimeout(async function (){
                 await this.disableCarrier(6) // disable reset
                 this.setState({reset: false, resetButton: false})
+                await this.enableTCA()
+                this.setState({showErrors: true})
             }.bind(this), resetDuration)
 
         }.bind(this), resetWaitDuration)
     }
 
+    async disableTCA() {
+        await this.disableCarrier(0)
+        await this.disableCarrier(17)
+    }
+    
+    async enableTCA() {
+        await this.enableCarrier(0)
+        await this.enableCarrier(17)
+    }
+    
     async setDSP(port) {
         if (this.state.program || this.state.resetButton) {
             console.log("Ignoring request to enable DSP", port, "as we're programming/resetting")
@@ -209,7 +226,7 @@ export default class Diagram extends React.Component {
 
     render() {
         let error = <div/>
-        if (this.state.error) {
+        if (this.state.error && this.state.showErrors) {
             error = <text x={200} y={30} style={{fill: red, fontSize: "2em", fontWeight: "bold"}}>
                 Error connecting to controller or device
             </text>
@@ -239,7 +256,7 @@ export default class Diagram extends React.Component {
                 {/*Program*/}
                 <RoundedRect
                     x={0} y={610}
-                    text={"Program"}
+                    text={this.state.carrierPorts[5]?"Program (on)":"Program"}
                     color={this.state.program?red:fill}
                     clickHandler={this.toggleProgram.bind(this)}
                 />
@@ -248,7 +265,7 @@ export default class Diagram extends React.Component {
                 {/*Reset*/}
                 <RoundedRect
                     x={0} y={710}
-                    text={"Reset"}
+                    text={this.state.carrierPorts[6]?"Reset (on)":"Reset"}
                     color={this.state.resetButton?red:fill}
                     clickHandler={this.startReset.bind(this)}
                 />
