@@ -72,7 +72,7 @@ export default class Diagram extends React.Component {
     }
 
     dspButtonColor(port) {
-        return this.state.ports[port]?green:fill
+        return this.state.programmerSelected===port?green:fill
     }
 
     dspColor(port) {
@@ -185,8 +185,8 @@ export default class Diagram extends React.Component {
             <RoundedRect
                 x={x} y={y}
                 text={"DSP-" + dsp}
-                color={this.dspButtonColor(dsp-1)}
-                clickHandler={this.setDSP.bind(this)} clickValue={dsp-1}
+                color={this.dspButtonColor(dsp)}
+                clickHandler={this.setDSP.bind(this)} clickValue={dsp}
             />
         )
     }
@@ -217,19 +217,19 @@ export default class Diagram extends React.Component {
             <svg viewBox={"0 0 1012 763"}>
                 {error}
 
-                {this.drawDspButton(0, 30, 1)}
+                {this.drawDspButton(0, 30, 0)}
                 <line x1={120} y1={30} x2={160} y2={30}/>
 
-                {this.drawDspButton(0, 130, 2)}
+                {this.drawDspButton(0, 130, 1)}
                 <line x1={120} y1={130} x2={160} y2={130}/>
 
-                {this.drawDspButton(0, 230, 3)}
+                {this.drawDspButton(0, 230, 2)}
                 <line x1={120} y1={230} x2={160} y2={230}/>
 
-                {this.drawDspButton(0, 330, 4)}
+                {this.drawDspButton(0, 330, 3)}
                 <line x1={120} y1={330} x2={160} y2={330}/>
 
-                {this.drawDspButton(0, 430, 5)}
+                {this.drawDspButton(0, 430, 4)}
                 <line x1={120} y1={430} x2={160} y2={430}/>
 
                 {/*connect all DSPs*/}
