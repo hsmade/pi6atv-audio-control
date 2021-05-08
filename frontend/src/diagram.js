@@ -63,7 +63,7 @@ export default class Diagram extends React.Component {
             .then((resp) => {
                 resp.json()
                     .then((data) => {
-                        if (data === null || data['error'] !== "") {
+                        if (data !== null && data['error'] !== "") {
                             console.log("set port error:", data)
                         }
                     })
@@ -193,7 +193,7 @@ export default class Diagram extends React.Component {
             .then((resp) => {
                 resp.json()
                     .then((data) => {
-                        if (data === null || data['error'] !== "") {
+                        if (data !== null && data['error'] !== "") {
                             console.log("set DSP error:", data)
                         }
                     })
