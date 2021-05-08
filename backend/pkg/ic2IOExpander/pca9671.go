@@ -1,4 +1,4 @@
-package pca9671
+package ic2IOExpander
 
 import (
 	"encoding/json"
@@ -40,7 +40,7 @@ func NewPCA9671(address uint16, filename string) (*PCA9671, error) {
 		state:   [2]byte{0x00, 0x00}, // P07 P06 P05 P04 P03 P02 P01 P00, P17 P16 P15 P14 P13 P12 P11 P10
 		logger: logrus.WithFields(logrus.Fields{
 			"address": fmt.Sprintf("%x", address),
-			"package": "pca9671",
+			"package": "ic2IOExpander",
 		}),
 		lock:     &sync.Mutex{},
 		filename: filename,

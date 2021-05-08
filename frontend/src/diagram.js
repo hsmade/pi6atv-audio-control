@@ -140,8 +140,10 @@ export default class Diagram extends React.Component {
             setTimeout(async function (){
                 await this.disableCarrier(6) // disable reset
                 this.setState({reset: false, resetButton: false})
-                await this.enableTCA()
-                this.setState({showErrors: true})
+                setTimeout(async function () { // re-enable i2c, with some delay
+                    await this.enableTCA()
+                    this.setState({showErrors: true})
+                }.bind(this), 200)
             }.bind(this), resetDuration)
 
         }.bind(this), resetWaitDuration)

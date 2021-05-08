@@ -1,4 +1,4 @@
-package pca9671
+package ic2IOExpander
 
 import (
 	"bytes"

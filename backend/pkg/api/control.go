@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/hsmade/pi6atv-audio-control/backend/pkg/config"
-	"github.com/hsmade/pi6atv-audio-control/backend/pkg/pca9671"
-	"github.com/hsmade/pi6atv-audio-control/backend/pkg/tca9548a"
+	"github.com/hsmade/pi6atv-audio-control/backend/pkg/ic2IOExpander"
+	"github.com/hsmade/pi6atv-audio-control/backend/pkg/i2cMultiplexer"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"net/http"
@@ -14,17 +14,17 @@ import (
 )
 
 type Control struct {
-	pca *pca9671.PCA9671
-	tca *tca9548a.TCA9548a
+	pca *ic2IOExpander.PCA9671
+	tca *i2cMultiplexer.TCA9548a
 }
 
 // NewControl takes a config and creates a new Control object
 func NewControl(config *config.Config) (*Control, error) {
-	pca, err := pca9671.NewPCA9671(config.Backend.Pca.Address, config.Backend.Pca.Filename)
+	pca, err := ic2IOExpander.NewPCA9671(config.Backend.Pca.Address, config.Backend.Pca.Filename)
 	if err != nil {
 		return nil, errors.Wrap(err, "initialising new PCA object")
 	}
-	tca, err := tca9548a.NewTCA9548a(config.Backend.Tca.Address)
+	tca, err := i2cMultiplexer.NewTCA9548a(config.Backend.Tca.Address)
 	if err != nil {
 		return nil, errors.Wrap(err, "initialising new TCA object")
 	}
