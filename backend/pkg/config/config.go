@@ -12,6 +12,9 @@ type Config struct {
 			Address  uint16
 			Filename string
 		}
+		Tca struct {
+			Address uint16
+		}
 	}
 }
 

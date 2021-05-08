@@ -64,7 +64,7 @@ func NewPCA9671(address uint16, filename string) (*PCA9671, error) {
 		p.logger.WithError(err).Fatal("registering I2C")
 	}
 
-	b, err := i2creg.Open("")
+	b, err := i2creg.Open("/dev/i2c-1")
 	if err != nil {
 		p.logger.WithError(err).Fatal("opening I2C bus")
 	}

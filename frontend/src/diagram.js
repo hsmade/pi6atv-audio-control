@@ -8,22 +8,24 @@ export default class Diagram extends React.Component {
         super(props);
 
         this.state = {
-            ports: [],
+            carrierPorts: [],
+            programmerSelected: 255,
             program: false,
             reset: false,
             resetButton: false,
             error: false,
+            showErrors: true,
         };
     }
 
-    async fetchPorts() {
+    async fetchState() {
         fetch(api)
             .then((resp) => {
                 // console.log("RESPONSE:", resp)
                 if(!resp.ok) throw new Error(`backend returned: ${resp.status}`)
                     resp.json()
                         .then((data) => {
-                            this.setState({ports: data, error: false})
+                            this.setState({carrierPorts: data['Pca'], programmerSelected: data['Tca'], error: false})
                         })
                         .catch((e) => {
                             console.log("failed to parse json, error:",e)
@@ -36,7 +38,7 @@ export default class Diagram extends React.Component {
             })
     }
 
-    async setPort(port, state) {
+    async setCarrierPort(port, state) {
         const url = api + port + "/" + state
         fetch(url, {method: "POST"})
             .then((resp) => {
@@ -48,35 +50,35 @@ export default class Diagram extends React.Component {
                     })
             })
             .catch((e) => console.log("failed to do post request:", url, e))
-        await this.fetchPorts()
+        await this.fetchState()
     }
 
-    async enablePort(port) {
+    async enableCarrier(port) {
         console.log("Enabling port", port)
-        await this.setPort(port, true)
+        await this.setCarrierPort(port, true)
     }
 
-    async disablePort(port) {
+    async disableCarrier(port) {
         console.log("Disabling port", port)
-        await this.setPort(port, false)
+        await this.setCarrierPort(port, false)
     }
 
     // regularly update the ports
     componentDidMount() {
         try {
-            setInterval(this.fetchPorts.bind(this), 1000);
+            setInterval(this.fetchState.bind(this), 1000);
         } catch(e) {
             console.log(e);
         }
     }
 
     dspButtonColor(port) {
-        return this.state.ports[port]?green:fill
+        return this.state.programmerSelected===port?green:fill
     }
 
     dspColor(port) {
         let color = fill
-        if (this.state.ports[port] ) {
+        if (this.state.programmerSelected===port) {
             color = green
             if (this.state.program) {
                 color = red
@@ -89,12 +91,13 @@ export default class Diagram extends React.Component {
     }
 
     carrierColor(port) {
-        return this.state.ports[port]?green:red
+        if (this.state.carrierPorts===undefined) return '#606060'
+        return this.state.carrierPorts[port]?green:red
     }
 
     hasPortSelected() {
         for (let i=0; i<=5; i++) {
-            if (this.state.ports[i]) return true
+            if (this.state.carrierPorts[i]) return true
         }
         return false
     }
@@ -102,14 +105,18 @@ export default class Diagram extends React.Component {
     async toggleProgram() {
         if (this.state.program) {
             console.log("Disable program")
-            await this.disablePort(5)
+            await this.disableCarrier(5)
+            await this.enableTCA()
+            this.setState({showErrors: true})
         } else {
             if (!this.hasPortSelected()) {
                 console.log("Not enabling program as there is no active port")
                 return
             }
             console.log("Enable program")
-            await this.enablePort(5)
+            await this.disableTCA()
+            this.setState({showErrors: false})
+            await this.enableCarrier(5)
         }
         this.setState({program: !this.state.program})
     }
@@ -123,49 +130,71 @@ export default class Diagram extends React.Component {
         console.log("Enable reset")
         this.setState({resetButton: true})
 
-        await this.disablePort(5) // disable program
+        await this.disableCarrier(5) // disable program
         this.setState({program: false})
 
         setTimeout(async function (){
-            await this.enablePort(6) // enable reset
+            await this.enableCarrier(6) // enable reset
             this.setState({reset: true})
 
             setTimeout(async function (){
-                await this.disablePort(6) // disable reset
+                await this.disableCarrier(6) // disable reset
                 this.setState({reset: false, resetButton: false})
+                await this.enableTCA()
+                this.setState({showErrors: true})
             }.bind(this), resetDuration)
 
         }.bind(this), resetWaitDuration)
     }
 
-    async toggleDSP(port) {
+    async disableTCA() {
+        await this.disableCarrier(0)
+        await this.disableCarrier(17)
+    }
+    
+    async enableTCA() {
+        await this.enableCarrier(0)
+        await this.enableCarrier(17)
+    }
+    
+    async setDSP(port) {
         if (this.state.program || this.state.resetButton) {
             console.log("Ignoring request to enable DSP", port, "as we're programming/resetting")
             return
         }
 
         // if port is already enabled, just disable it
-        if (this.state.ports[port]) {
-            await this.disablePort(port)
+        if (this.state.programmerSelected===port) {
+            await this.ProgrammerSetPort(255)
             return
         }
 
         console.log("Enable DSP",port)
-        // disable all DSPs
-        for (let i=0; i<=5; i++) {
-            await this.disablePort(i)
-        }
-        // enable the one we asked for
-        await this.enablePort(port)
+        await this.ProgrammerSetPort(port)
+    }
+
+    async ProgrammerSetPort(port) {
+        const url = api + "/programmer/" + port
+        fetch(url, {method: "POST"})
+            .then((resp) => {
+                resp.json()
+                    .then((data) => {
+                        if (data === null || data['error'] !== "") {
+                            console.log("set DSP error:", data)
+                        }
+                    })
+            })
+            .catch((e) => console.log("failed to do post request:", url, e))
+        await this.fetchState()
     }
 
     async toggleCarrier(port) {
-        if (this.state.ports[port]) {
+        if (this.state.carrierPorts[port]) {
             console.log("Disable carrier", port)
-            await this.disablePort(port)
+            await this.disableCarrier(port)
         } else {
             console.log("Enable carrier", port)
-            await this.enablePort(port)
+            await this.enableCarrier(port)
         }
     }
 
@@ -174,8 +203,8 @@ export default class Diagram extends React.Component {
             <RoundedRect
                 x={x} y={y}
                 text={"DSP-" + dsp}
-                color={this.dspButtonColor(dsp-1)}
-                clickHandler={this.toggleDSP.bind(this)} clickValue={dsp-1}
+                color={this.dspButtonColor(dsp)}
+                clickHandler={this.setDSP.bind(this)} clickValue={dsp}
             />
         )
     }
@@ -197,7 +226,7 @@ export default class Diagram extends React.Component {
 
     render() {
         let error = <div/>
-        if (this.state.error) {
+        if (this.state.error && this.state.showErrors) {
             error = <text x={200} y={30} style={{fill: red, fontSize: "2em", fontWeight: "bold"}}>
                 Error connecting to controller or device
             </text>
@@ -206,19 +235,19 @@ export default class Diagram extends React.Component {
             <svg viewBox={"0 0 1012 763"}>
                 {error}
 
-                {this.drawDspButton(0, 30, 1)}
+                {this.drawDspButton(0, 30, 0)}
                 <line x1={120} y1={30} x2={160} y2={30}/>
 
-                {this.drawDspButton(0, 130, 2)}
+                {this.drawDspButton(0, 130, 1)}
                 <line x1={120} y1={130} x2={160} y2={130}/>
 
-                {this.drawDspButton(0, 230, 3)}
+                {this.drawDspButton(0, 230, 2)}
                 <line x1={120} y1={230} x2={160} y2={230}/>
 
-                {this.drawDspButton(0, 330, 4)}
+                {this.drawDspButton(0, 330, 3)}
                 <line x1={120} y1={330} x2={160} y2={330}/>
 
-                {this.drawDspButton(0, 430, 5)}
+                {this.drawDspButton(0, 430, 4)}
                 <line x1={120} y1={430} x2={160} y2={430}/>
 
                 {/*connect all DSPs*/}
@@ -227,7 +256,7 @@ export default class Diagram extends React.Component {
                 {/*Program*/}
                 <RoundedRect
                     x={0} y={610}
-                    text={"Program"}
+                    text={this.state.carrierPorts[5]?"Program (on)":"Program"}
                     color={this.state.program?red:fill}
                     clickHandler={this.toggleProgram.bind(this)}
                 />
@@ -236,7 +265,7 @@ export default class Diagram extends React.Component {
                 {/*Reset*/}
                 <RoundedRect
                     x={0} y={710}
-                    text={"Reset"}
+                    text={this.state.carrierPorts[6]?"Reset (on)":"Reset"}
                     color={this.state.resetButton?red:fill}
                     clickHandler={this.startReset.bind(this)}
                 />
