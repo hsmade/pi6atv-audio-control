@@ -72,7 +72,7 @@ func NewPCA9671(address uint16, filename string) (*PCA9671, error) {
 	p.device = &i2c.Dev{Addr: address, Bus: b}
 
 	err = p.restoreDump() // restore the previous known state
-	return &p, err        // FIXME: return p.Check()
+	return &p, err
 }
 
 func (p *PCA9671) Close() error {
@@ -134,26 +134,6 @@ func (p *PCA9671) storeDump() error {
 		return errors.Wrap(err, "writing json file")
 	}
 	return nil
-}
-
-// Check polls the device to see that it's connected
-func (p *PCA9671) Check() error {
-	// addr 1111 1000, addr-device+0
-	//  Re-START
-	// addr 1111 1001, read
-	// NACK
-	device := &i2c.Dev{Addr: 248, Bus: p.bus}
-	data := make([]byte, 3)
-	err := device.Tx([]byte{byte(p.address)}, data)
-	if err != nil {
-		return errors.Wrap(err, "Opening reading device ID")
-	}
-	p.logger.Debugf("received ID byte: %#b", data)
-	// FIXME: check response
-	// m m m m m m m m  c c c c c c c f  f p p p p r r r
-	// manufacturer(8), category(7), feature(2+4), revision(3)
-
-	return errors.New("Not implemented yet")
 }
 
 // GetAll gets the state of all ports

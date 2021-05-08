@@ -79,38 +79,6 @@ func TestNewPCA9671(t *testing.T) {
 	}
 }
 
-// TODO
-func TestPCA9671_Check(t *testing.T) {
-	type fields struct {
-		state   [2]byte
-		device  I2CWriter
-		address uint16
-		logger  *logrus.Entry
-		lock    sync.Locker
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			p := &PCA9671{
-				state:   tt.fields.state,
-				device:  tt.fields.device,
-				address: tt.fields.address,
-				logger:  tt.fields.logger,
-				lock:    tt.fields.lock,
-			}
-			if err := p.Check(); (err != nil) != tt.wantErr {
-				t.Errorf("Check() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
 func TestPCA9671_Get(t *testing.T) {
 	logrus.SetLevel(logrus.DebugLevel)
 	type fields struct {

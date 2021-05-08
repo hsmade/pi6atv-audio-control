@@ -20,12 +20,6 @@ func NewRouter(config *config.Config) (*mux.Router, error) {
 	router.HandleFunc("/control/io/", control.GetIOExpander).Methods("GET")
 	router.HandleFunc("/control/io/{port}", control.GetIOExpanderPort).Methods("GET")
 	router.HandleFunc("/control/io/{port}/{state}", control.SetIOExpanderPort).Methods("POST")
-
-
-	router.HandleFunc("/control/", control.GetAll)
-	router.HandleFunc("/control/programmer/{port}", control.ProgrammerSet).Methods("POST")
-	router.HandleFunc("/control/{relay}", control.CarrierGet).Methods("GET")
-	router.HandleFunc("/control/{relay}/{state}", control.CarrierSet).Methods("POST")
 	router.Handle("/metrics", promhttp.Handler())
 
 	return router, nil
