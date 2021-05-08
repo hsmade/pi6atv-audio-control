@@ -97,4 +97,4 @@ When `reset` is pressed:
 * the i2c bus to the multiplexer is reconnected
 
 ## TODO
- * reconnect i2c on reset doesn't work: sending both enables for port 0 and 17 at the same time clashes; seems locking is needed
+* tests for the multiplexer

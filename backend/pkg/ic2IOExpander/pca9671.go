@@ -159,8 +159,6 @@ func (p *PCA9671) Check() error {
 // GetAll gets the state of all ports
 func (p *PCA9671) GetAll() map[int]bool {
 	result := make(map[int]bool, 16)
-	p.lock.Lock()
-	defer p.lock.Unlock()
 	for i := 0; i < 16; i++ {
 		port := i
 		if port > 7 {
@@ -177,7 +175,7 @@ func (p *PCA9671) SetAll(state map[int]bool) error {
 	for i, isSet := range state {
 		p.state = setBit(p.state, i, isSet)
 	}
-	p.lock.Unlock()
+	defer p.lock.Unlock()
 	return p.writeState()
 }
 
