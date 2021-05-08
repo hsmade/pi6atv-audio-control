@@ -8,38 +8,57 @@ export default class Diagram extends React.Component {
         super(props);
 
         this.state = {
-            carrierPorts: [],
-            programmerSelected: 255,
+            expanderPorts: [],
+            multiplexerPortSelected: 255,
             program: false,
             reset: false,
             resetButton: false,
-            error: false,
-            showErrors: true,
+            multiplexerError: false,
+            showMultiplexerError: true,
+            expanderError: false,
         };
     }
 
     async fetchState() {
-        fetch(api)
+        fetch(`${api}/io/`)
             .then((resp) => {
                 // console.log("RESPONSE:", resp)
-                if(!resp.ok) throw new Error(`backend returned: ${resp.status}`)
+                if(!resp.ok) throw new Error(`[${api}/io/] returned: ${resp.status}`)
                     resp.json()
                         .then((data) => {
-                            this.setState({carrierPorts: data['Pca'], programmerSelected: data['Tca'], error: false})
+                            this.setState({expanderPorts: data, expanderError: false})
                         })
                         .catch((e) => {
-                            console.log("failed to parse json, error:",e)
-                            this.setState({error: true})
+                            console.log(`[${api}/io/] failed to parse json, error: ${e}`)
+                            this.setState({expanderError: true})
                         })
                 })
             .catch((e) => {
                 console.log("failed to do request:", api, e)
-                this.setState({error: true})
+                this.setState({expanderError: true})
+            })
+
+        fetch(`${api}/mpx/`)
+            .then((resp) => {
+                // console.log("RESPONSE:", resp)
+                if(!resp.ok) throw new Error(`[${api}/mpx/] returned: ${resp.status}`)
+                    resp.json()
+                        .then((data) => {
+                            this.setState({multiplexerPortSelected: data['Port'], multiplexerError: false})
+                        })
+                        .catch((e) => {
+                            console.log(`[${api}/mpx/] failed to parse json, error: ${e}`)
+                            this.setState({multiplexerError: true})
+                        })
+                })
+            .catch((e) => {
+                console.log("failed to do request:", api, e)
+                this.setState({multiplexerError: true})
             })
     }
 
-    async setCarrierPort(port, state) {
-        const url = api + port + "/" + state
+    async setExpanderPort(port, state) {
+        const url = `${api}/${port}/${state}`
         fetch(url, {method: "POST"})
             .then((resp) => {
                 resp.json()
@@ -55,12 +74,12 @@ export default class Diagram extends React.Component {
 
     async enableCarrier(port) {
         console.log("Enabling port", port)
-        await this.setCarrierPort(port, true)
+        await this.setExpanderPort(port, true)
     }
 
     async disableCarrier(port) {
         console.log("Disabling port", port)
-        await this.setCarrierPort(port, false)
+        await this.setExpanderPort(port, false)
     }
 
     // regularly update the ports
@@ -73,12 +92,12 @@ export default class Diagram extends React.Component {
     }
 
     dspButtonColor(port) {
-        return this.state.programmerSelected===port?green:fill
+        return this.state.multiplexerPortSelected===port?green:fill
     }
 
     dspColor(port) {
         let color = fill
-        if (this.state.programmerSelected===port) {
+        if (this.state.multiplexerPortSelected===port) {
             color = green
             if (this.state.program) {
                 color = red
@@ -91,15 +110,8 @@ export default class Diagram extends React.Component {
     }
 
     carrierColor(port) {
-        if (this.state.carrierPorts===undefined) return '#606060'
-        return this.state.carrierPorts[port]?green:red
-    }
-
-    hasPortSelected() {
-        for (let i=0; i<=5; i++) {
-            if (this.state.carrierPorts[i]) return true
-        }
-        return false
+        if (this.state.expanderPorts===undefined) return '#606060'
+        return this.state.expanderPorts[port]?green:red
     }
 
     async toggleProgram() {
@@ -107,22 +119,22 @@ export default class Diagram extends React.Component {
             console.log("Disable program")
             await this.disableCarrier(5)
             await this.enableTCA()
-            this.setState({showErrors: true})
+            this.setState({showMultiplexerError: true})
         } else {
-            if (!this.hasPortSelected()) {
+            if (this.state.multiplexerPortSelected === 255) {
                 console.log("Not enabling program as there is no active port")
                 return
             }
             console.log("Enable program")
             await this.disableTCA()
-            this.setState({showErrors: false})
+            this.setState({showMultiplexerError: false})
             await this.enableCarrier(5)
         }
         this.setState({program: !this.state.program})
     }
 
     async startReset() {
-        if (!this.hasPortSelected()) {
+        if (this.state.multiplexerPortSelected === 255) {
             console.log("Not enabling reset as there is no active port")
             return
         }
@@ -142,7 +154,7 @@ export default class Diagram extends React.Component {
                 this.setState({reset: false, resetButton: false})
                 setTimeout(async function () { // re-enable i2c, with some delay
                     await this.enableTCA()
-                    this.setState({showErrors: true})
+                    this.setState({showMultiplexerError: true})
                 }.bind(this), 200)
             }.bind(this), resetDuration)
 
@@ -166,7 +178,7 @@ export default class Diagram extends React.Component {
         }
 
         // if port is already enabled, just disable it
-        if (this.state.programmerSelected===port) {
+        if (this.state.multiplexerPortSelected===port) {
             await this.ProgrammerSetPort(255)
             return
         }
@@ -176,7 +188,7 @@ export default class Diagram extends React.Component {
     }
 
     async ProgrammerSetPort(port) {
-        const url = api + "/programmer/" + port
+        const url = `${api}/mpx/${port}`
         fetch(url, {method: "POST"})
             .then((resp) => {
                 resp.json()
@@ -191,7 +203,7 @@ export default class Diagram extends React.Component {
     }
 
     async toggleCarrier(port) {
-        if (this.state.carrierPorts[port]) {
+        if (this.state.expanderPorts[port]) {
             console.log("Disable carrier", port)
             await this.disableCarrier(port)
         } else {
@@ -227,15 +239,22 @@ export default class Diagram extends React.Component {
     }
 
     render() {
-        let error = <div/>
-        if (this.state.error && this.state.showErrors) {
-            error = <text x={200} y={30} style={{fill: red, fontSize: "2em", fontWeight: "bold"}}>
-                Error connecting to controller or device
+        let multiplexerError = <div/>
+        if (this.state.multiplexerError && this.state.showMultiplexerError) {
+            multiplexerError = <text x={200} y={30} style={{fill: red, fontSize: "2em", fontWeight: "bold"}}>
+                Error connecting to multiplexer / DSP switch
+            </text>
+        }
+        let expanderError = <div/>
+        if (this.state.expanderError) {
+            expanderError = <text x={200} y={0} style={{fill: red, fontSize: "2em", fontWeight: "bold"}}>
+                Error connecting to expander / Carrier switch
             </text>
         }
         return (
             <svg viewBox={"0 0 1012 763"}>
-                {error}
+                {multiplexerError}
+                {expanderError}
 
                 {this.drawDspButton(0, 30, 0)}
                 <line x1={120} y1={30} x2={160} y2={30}/>
@@ -258,7 +277,7 @@ export default class Diagram extends React.Component {
                 {/*Program*/}
                 <RoundedRect
                     x={0} y={610}
-                    text={this.state.carrierPorts[5]?"Program (on)":"Program"}
+                    text={"Program"}
                     color={this.state.program?red:fill}
                     clickHandler={this.toggleProgram.bind(this)}
                 />
@@ -267,7 +286,7 @@ export default class Diagram extends React.Component {
                 {/*Reset*/}
                 <RoundedRect
                     x={0} y={710}
-                    text={this.state.carrierPorts[6]?"Reset (on)":"Reset"}
+                    text={this.state.expanderPorts[6]?"Reset (on)":"Reset"}
                     color={this.state.resetButton?red:fill}
                     clickHandler={this.startReset.bind(this)}
                 />

@@ -15,13 +15,13 @@ func NewRouter(config *config.Config) (*mux.Router, error) {
 	}
 
 	router := mux.NewRouter()
-	// /control
-	//   /io/
-	//     / (get states)
-	//     /{port}/{state} (set)
-	//  /mpx
-	//    / (get state)
-	//    /{port} (set)
+	router.HandleFunc("/control/mpx/", control.GetMultiplexer).Methods("GET")
+	router.HandleFunc("/control/mpx/{port}", control.SetMultiplexer).Methods("POST")
+	router.HandleFunc("/control/io/", control.GetIOExpander).Methods("GET")
+	router.HandleFunc("/control/io/{port}", control.GetIOExpanderPort).Methods("GET")
+	router.HandleFunc("/control/io/{port}/{state}", control.SetIOExpanderPort).Methods("POST")
+
+
 	router.HandleFunc("/control/", control.GetAll)
 	router.HandleFunc("/control/programmer/{port}", control.ProgrammerSet).Methods("POST")
 	router.HandleFunc("/control/{relay}", control.CarrierGet).Methods("GET")

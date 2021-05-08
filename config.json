@@ -9,7 +9,7 @@
     }
   },
   "frontend" : {
-    "api": "/control/",
+    "api": "/control",
     "stroke": "#41719c",
     "fill": "#5b9bd5",
     "red": "#d55b5b",
