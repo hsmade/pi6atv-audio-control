@@ -34,7 +34,7 @@ export default class Diagram extends React.Component {
                         })
                 })
             .catch((e) => {
-                console.log("failed to do request:", api, e)
+                console.log(`[${api}/io/] failed to do request: ${e}`)
                 this.setState({expanderError: true})
             })
 
@@ -52,13 +52,13 @@ export default class Diagram extends React.Component {
                         })
                 })
             .catch((e) => {
-                console.log("failed to do request:", api, e)
+                console.log(`[${api}/mpx/] failed to do request: ${e}`)
                 this.setState({multiplexerError: true})
             })
     }
 
     async setExpanderPort(port, state) {
-        const url = `${api}/${port}/${state}`
+        const url = `${api}/mpx/${port}/${state}`
         fetch(url, {method: "POST"})
             .then((resp) => {
                 resp.json()
@@ -188,7 +188,7 @@ export default class Diagram extends React.Component {
     }
 
     async ProgrammerSetPort(port) {
-        const url = `${api}/mpx/${port}`
+        const url = `${api}/io/${port}`
         fetch(url, {method: "POST"})
             .then((resp) => {
                 resp.json()
