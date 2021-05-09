@@ -130,8 +130,8 @@ export default class Diagram extends React.Component {
                 return
             }
             console.log("Enable program")
-            await this.disableTCA()
             this.setState({showMultiplexerError: false})
+            await this.disableTCA()
             await this.enableCarrier(5)
         }
         this.setState({program: !this.state.program})
