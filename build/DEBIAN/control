@@ -3,12 +3,12 @@ Section: unknown
 Priority: optional
 Maintainer: root <debian@fournier.nl>
 Build-Depends: debhelper (>= 10)
-Standards-Version: 0.0.11-13-g0e5ac54~0e5ac54
+Standards-Version: 0.0.11-14-gd2f46e2~d2f46e2
 Homepage: <insert the upstream URL, if relevant>
 #Vcs-Git: https://https://github.com/hsmade/pi6atv-audio-control.git
 #Vcs-Browser: https://https://github.com/hsmade/pi6atv-audio-control.git
 Package: repeater-audio-control
-Version: 0.0.11-13-g0e5ac54~0e5ac54
+Version: 0.0.11-14-gd2f46e2~d2f46e2
 Architecture: armhf
 Depends: nginx, snmpd, virtualenv, python3
 Description: Handles audio control for the pi6atv repeater

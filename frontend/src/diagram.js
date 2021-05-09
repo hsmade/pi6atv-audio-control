@@ -19,6 +19,10 @@ export default class Diagram extends React.Component {
         };
     }
 
+    async sleep(milliseconds) {
+        return new Promise(resolve => setTimeout(resolve, milliseconds))
+    }
+
     async fetchState() {
         fetch(`${api}/io/`)
             .then((resp) => {
@@ -163,12 +167,16 @@ export default class Diagram extends React.Component {
 
     async disableTCA() {
         await this.disableCarrier(0)
+        await this.sleep(100)
         await this.disableCarrier(17)
+        await this.sleep(100)
     }
     
     async enableTCA() {
         await this.enableCarrier(0)
+        await this.sleep(100)
         await this.enableCarrier(17)
+        await this.sleep(100)
     }
     
     async setDSP(port) {
@@ -241,13 +249,13 @@ export default class Diagram extends React.Component {
     render() {
         let multiplexerError = <div/>
         if (this.state.multiplexerError && this.state.showMultiplexerError) {
-            multiplexerError = <text x={200} y={30} style={{fill: red, fontSize: "2em", fontWeight: "bold"}}>
-                Error connecting to multiplexer / DSP switch
+            multiplexerError = <text x={200} y={40} style={{fill: red, fontSize: "1.5em", fontWeight: "bold"}}>
+                Error connecting to multiplexer / DSP switch (press reset)
             </text>
         }
         let expanderError = <div/>
         if (this.state.expanderError) {
-            expanderError = <text x={200} y={0} style={{fill: red, fontSize: "2em", fontWeight: "bold"}}>
+            expanderError = <text x={200} y={20} style={{fill: red, fontSize: "1.5em", fontWeight: "bold"}}>
                 Error connecting to expander / Carrier switch
             </text>
         }
