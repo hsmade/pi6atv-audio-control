@@ -123,6 +123,7 @@ export default class Diagram extends React.Component {
             console.log("Disable program")
             await this.disableCarrier(5)
             await this.enableTCA()
+            await this.sleep(1100)
             this.setState({showMultiplexerError: true})
         } else {
             if (this.state.multiplexerPortSelected === 255) {
