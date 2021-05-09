@@ -58,7 +58,7 @@ export default class Diagram extends React.Component {
     }
 
     async setExpanderPort(port, state) {
-        const url = `${api}/mpx/${port}/${state}`
+        const url = `${api}/io/${port}/${state}`
         fetch(url, {method: "POST"})
             .then((resp) => {
                 resp.json()
@@ -102,9 +102,9 @@ export default class Diagram extends React.Component {
             if (this.state.program) {
                 color = red
             }
-            if (this.state.reset) {
-                color = orange
-            }
+        }
+        if (this.state.reset) {
+            color = orange
         }
         return color
     }
@@ -188,7 +188,7 @@ export default class Diagram extends React.Component {
     }
 
     async ProgrammerSetPort(port) {
-        const url = `${api}/io/${port}`
+        const url = `${api}/mpx/${port}`
         fetch(url, {method: "POST"})
             .then((resp) => {
                 resp.json()

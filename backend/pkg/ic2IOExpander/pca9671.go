@@ -211,7 +211,7 @@ func (p *PCA9671) Get(port int) (bool, error) {
 func (p *PCA9671) Set(port int, state bool) error {
 	p.lock.Lock()
 	p.state = setBit(p.state, port, state)
-	p.lock.Unlock()
+	defer p.lock.Unlock()
 	return p.writeState()
 }
 
