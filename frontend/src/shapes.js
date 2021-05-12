@@ -128,7 +128,6 @@ export class ArrowRight extends React.Component {
                     fill={fill}
                     stroke={stroke}
                     strokeWidth="2"
-                    style={this.props.style}
                 />
             </svg>
         )

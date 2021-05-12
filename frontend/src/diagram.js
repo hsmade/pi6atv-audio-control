@@ -27,36 +27,36 @@ export default class Diagram extends React.Component {
         fetch(`${api}/io/`)
             .then((resp) => {
                 // console.log("RESPONSE:", resp)
-                if(!resp.ok) throw new Error(`[${api}/io/] returned: ${resp.status}`)
+                if(!resp.ok) throw new Error(`[GET ${api}/io/] returned: ${resp.status}`)
                     resp.json()
                         .then((data) => {
                             this.setState({expanderPorts: data, expanderError: false})
                         })
                         .catch((e) => {
-                            console.log(`[${api}/io/] failed to parse json, error: ${e}`)
+                            console.log(`[GET ${api}/io/] failed to parse json, error:`, e)
                             this.setState({expanderError: true})
                         })
                 })
             .catch((e) => {
-                console.log(`[${api}/io/] failed to do request: ${e}`)
+                console.log(`[GET ${api}/io/] failed to do request:`, e)
                 this.setState({expanderError: true})
             })
 
         fetch(`${api}/mpx/`)
             .then((resp) => {
                 // console.log("RESPONSE:", resp)
-                if(!resp.ok) throw new Error(`[${api}/mpx/] returned: ${resp.status}`)
+                if(!resp.ok) throw new Error(`[GET ${api}/mpx/] returned: ${resp.status}`)
                     resp.json()
                         .then((data) => {
                             this.setState({multiplexerPortSelected: data['Port'], multiplexerError: false})
                         })
                         .catch((e) => {
-                            console.log(`[${api}/mpx/] failed to parse json, error: ${e}`)
+                            console.log(`[GET ${api}/mpx/] failed to parse json, error:`, e)
                             this.setState({multiplexerError: true})
                         })
                 })
             .catch((e) => {
-                console.log(`[${api}/mpx/] failed to do request: ${e}`)
+                console.log(`[GET ${api}/mpx/] failed to do request:`, e)
                 this.setState({multiplexerError: true})
             })
     }
@@ -67,12 +67,15 @@ export default class Diagram extends React.Component {
             .then((resp) => {
                 resp.json()
                     .then((data) => {
-                        if (data !== null && data['error'] !== "") {
-                            console.log("set port error:", data)
+                        if (data !== null && data['error'] !== undefined) {
+                            console.log(`[POST ${url}] set port error:`, data)
                         }
                     })
+                    .catch((e) => {
+                        console.log(`[POST ${url}] failed to parse json, error:`, e)
+                    })
             })
-            .catch((e) => console.log("failed to do post request:", url, e))
+            .catch((e) => console.log(`[POST ${url}] failed to do post request:`, e))
         await this.fetchState()
     }
 
@@ -204,12 +207,15 @@ export default class Diagram extends React.Component {
             .then((resp) => {
                 resp.json()
                     .then((data) => {
-                        if (data !== null && data['error'] !== "") {
-                            console.log("set DSP error:", data)
+                        if (data !== null && data['error'] !== undefined) {
+                            console.log(`[POST ${url}] set DSP error`, data)
                         }
                     })
+                    .catch((e) => {
+                        console.log(`[POST ${url}] failed to parse json, error:`, e)
+                    })
             })
-            .catch((e) => console.log("failed to do post request:", url, e))
+            .catch((e) => console.log(`[POST ${url}] failed to do post request:`, e))
         await this.fetchState()
     }
 
@@ -262,33 +268,40 @@ export default class Diagram extends React.Component {
                 Error connecting to expander / Carrier switch
             </text>
         }
+
+        let i2cStatus = <div/>
+        if (this.state.expanderPorts !== undefined && (!this.state.expanderPorts[0] || !this.state.expanderPorts[17])) {
+            i2cStatus = <text x={0} y={530} style={{fill: fill, fontSize: "1.5em", fontWeight: "bold"}}>
+                I2c to pi disconnected
+            </text>
+        }
         return (
             <svg viewBox={"0 0 1012 763"}>
                 {multiplexerError}
                 {expanderError}
 
                 {this.drawDspButton(0, 30, 1)}
-                <line x1={120} y1={30} x2={160} y2={30} style={{stroke: this.state.multiplexerEnabled?fill:red}}/>
+                <line x1={120} y1={30} x2={160} y2={30}/>
 
                 {this.drawDspButton(0, 130, 2)}
-                <line x1={120} y1={130} x2={160} y2={130} style={{stroke: this.state.multiplexerEnabled?fill:red}}/>
+                <line x1={120} y1={130} x2={160} y2={130}/>
 
                 {this.drawDspButton(0, 230, 3)}
-                <line x1={120} y1={230} x2={160} y2={230} style={{stroke: this.state.multiplexerEnabled?fill:red}}/>
+                <line x1={120} y1={230} x2={160} y2={230}/>
 
                 {this.drawDspButton(0, 330, 4)}
-                <line x1={120} y1={330} x2={160} y2={330} style={{stroke: this.state.multiplexerEnabled?fill:red}}/>
+                <line x1={120} y1={330} x2={160} y2={330}/>
 
                 {this.drawDspButton(0, 430, 5)}
-                <line x1={120} y1={430} x2={160} y2={430} style={{stroke: this.state.multiplexerEnabled?fill:red}}/>
+                <line x1={120} y1={430} x2={160} y2={430}/>
 
                 {/*connect all DSPs*/}
-                <line x1={160} y1={30} x2={160} y2={430} style={{stroke: this.state.multiplexerEnabled?fill:red}}/>
-                <line x1={160} y1={330} x2={220} y2={330} style={{stroke: this.state.multiplexerEnabled?fill:red}}/>
-                <ArrowRight x={220} y={330} style={{
-                    stroke: this.state.multiplexerEnabled?fill:red,
-                    fill: this.state.multiplexerEnabled?fill:red,
-                }}/>
+                <line x1={160} y1={30} x2={160} y2={430}/>
+                <line x1={160} y1={330} x2={220} y2={330}/>
+                <ArrowRight x={220} y={330}/>
+
+                {/*i2c status*/}
+                {i2cStatus}
 
                 {/*Program*/}
                 <RoundedRect
