@@ -269,12 +269,7 @@ export default class Diagram extends React.Component {
             </text>
         }
 
-        let i2cStatus = <div/>
-        if (this.state.expanderPorts !== undefined && (!this.state.expanderPorts[0] || !this.state.expanderPorts[17])) {
-            i2cStatus = <text x={0} y={530} style={{fill: fill, fontSize: "1.5em", fontWeight: "bold"}}>
-                I2c to pi disconnected
-            </text>
-        }
+        const i2cDspDisabled = (this.state.expanderPorts !== undefined && (!this.state.expanderPorts[0] || !this.state.expanderPorts[17]))
         return (
             <svg viewBox={"0 0 1012 763"}>
                 {multiplexerError}
@@ -300,9 +295,6 @@ export default class Diagram extends React.Component {
                 <line x1={160} y1={330} x2={220} y2={330}/>
                 <ArrowRight x={220} y={330}/>
 
-                {/*i2c status*/}
-                {i2cStatus}
-
                 {/*Program*/}
                 <RoundedRect
                     x={0} y={610}
@@ -321,13 +313,22 @@ export default class Diagram extends React.Component {
                 />
                 <line x1={120} y1={710} x2={298} y2={710}/>
 
+                {/*I2C DSP*/}
+                <Diamond
+                    x={238} y={215} text={"I2C-DSPs"}
+                    text2={i2cDspDisabled?"Inactive":"Active"}
+                    color={i2cDspDisabled?red:fill}
+                />
+                <ArrowUp x={292} y={270}/>
+                <line x1={298} y1={330} x2={298} y2={282}/>
+
                 {/*Besturing*/}
                 <Diamond
-                    x={238} y={330} text={"Besturing"}
+                    x={238} y={320} text={"Besturing"}
                     color={this.state.program?red:fill}
                 />
-                <ArrowUp x={292} y={366}/>
-                <line x1={298} y1={366} x2={298} y2={710}/>
+                <ArrowUp x={292} y={376}/>
+                <line x1={298} y1={388} x2={298} y2={710}/>
                 <line x1={358} y1={330} x2={398} y2={330}/>
                 <line x1={398} y1={78} x2={398} y2={710}/>
 
