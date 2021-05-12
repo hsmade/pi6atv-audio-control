@@ -49,6 +49,8 @@ func (c *Control) GetIOExpander(w http.ResponseWriter, r *http.Request) {
 // SetIOExpanderPort sets the state of a port on the IO expander
 func (c *Control) SetIOExpanderPort(w http.ResponseWriter, r *http.Request) {
 	logrus.Debugf("SetIOExpanderPort called with %v", r.URL.Path)
+	c.lock.Lock()
+	defer c.lock.Unlock()
 	w.Header().Set("Content-Type", "application/json")
 
 	vars := mux.Vars(r)

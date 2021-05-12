@@ -98,3 +98,5 @@ When `reset` is pressed:
 
 ## TODO
 * tests for the multiplexer
+* dsp select -> disconnect i2c
+* make web calls lock

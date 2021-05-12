@@ -32,6 +32,8 @@ func (c *Control) GetMultiplexer(w http.ResponseWriter, r *http.Request) {
 // SetMultiplexer sets the port to be selected on the multiplexer.
 func (c *Control) SetMultiplexer(w http.ResponseWriter, r *http.Request) {
 	logrus.Debugf("SetMultiplexer called with %v", r.URL.Path)
+	c.lock.Lock()
+	defer c.lock.Unlock()
 	w.Header().Set("Content-Type", "application/json")
 
 	vars := mux.Vars(r)

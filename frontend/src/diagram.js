@@ -14,7 +14,7 @@ export default class Diagram extends React.Component {
             reset: false,
             resetButton: false,
             multiplexerError: false,
-            showMultiplexerError: true,
+            multiplexerEnabled: true,
             expanderError: false,
         };
     }
@@ -95,10 +95,12 @@ export default class Diagram extends React.Component {
         }
     }
 
+    // The color for the DSP buttons, on the left
     dspButtonColor(port) {
         return this.state.multiplexerPortSelected===port?green:fill
     }
 
+    // The color for the DSPs, in the middle
     dspColor(port) {
         let color = fill
         if (this.state.multiplexerPortSelected===port) {
@@ -113,6 +115,7 @@ export default class Diagram extends React.Component {
         return color
     }
 
+    // the color for the carriers, on the right
     carrierColor(port) {
         if (this.state.expanderPorts===undefined) return '#606060'
         return this.state.expanderPorts[port]?green:red
@@ -122,17 +125,12 @@ export default class Diagram extends React.Component {
         if (this.state.program) {
             console.log("Disable program")
             await this.disableCarrier(5)
-            await this.enableTCA()
-            await this.sleep(1100)
-            this.setState({showMultiplexerError: true})
         } else {
             if (this.state.multiplexerPortSelected === 255) {
                 console.log("Not enabling program as there is no active port")
                 return
             }
             console.log("Enable program")
-            this.setState({showMultiplexerError: false})
-            await this.disableTCA()
             await this.enableCarrier(5)
         }
         this.setState({program: !this.state.program})
@@ -157,27 +155,27 @@ export default class Diagram extends React.Component {
             setTimeout(async function (){
                 await this.disableCarrier(6) // disable reset
                 this.setState({reset: false, resetButton: false})
-                setTimeout(async function () { // re-enable i2c, with some delay
-                    await this.enableTCA()
-                    this.setState({showMultiplexerError: true})
-                }.bind(this), 200)
             }.bind(this), resetDuration)
 
         }.bind(this), resetWaitDuration)
     }
 
-    async disableTCA() {
+    async disableMultiplexer() {
+        console.log("Disabling multiplexer")
+        this.setState({multiplexerEnabled: false})
         await this.disableCarrier(0)
         await this.sleep(100)
         await this.disableCarrier(17)
         await this.sleep(100)
     }
     
-    async enableTCA() {
+    async enableMultiplexer() {
+        console.log("Enabling multiplexer")
         await this.enableCarrier(0)
         await this.sleep(100)
         await this.enableCarrier(17)
-        await this.sleep(100)
+        await this.sleep(300)
+        this.setState({multiplexerEnabled: true})
     }
     
     async setDSP(port) {
@@ -188,15 +186,19 @@ export default class Diagram extends React.Component {
 
         // if port is already enabled, just disable it
         if (this.state.multiplexerPortSelected===port) {
-            await this.ProgrammerSetPort(255)
+            await this.enableMultiplexer() // first make sure the i2c for the mpx is connected to the port
+            await this.multiplexerSetPort(255)
             return
         }
 
         console.log("Enable DSP",port)
-        await this.ProgrammerSetPort(port)
+        await this.enableMultiplexer() // make sure it's on, before we try to switch
+        await this.multiplexerSetPort(port)
+        await this.disableMultiplexer() // disconnect the pi from i2c, so the programmer can take over
     }
 
-    async ProgrammerSetPort(port) {
+    async multiplexerSetPort(port) {
+        console.log(`Setting multiplexer to port ${port}`)
         const url = `${api}/mpx/${port}`
         fetch(url, {method: "POST"})
             .then((resp) => {
@@ -226,8 +228,8 @@ export default class Diagram extends React.Component {
             <RoundedRect
                 x={x} y={y}
                 text={"DSP-" + dsp}
-                color={this.dspButtonColor(dsp)}
-                clickHandler={this.setDSP.bind(this)} clickValue={dsp}
+                color={this.dspButtonColor(dsp-1)}
+                clickHandler={this.setDSP.bind(this)} clickValue={dsp-1}
             />
         )
     }
@@ -249,9 +251,9 @@ export default class Diagram extends React.Component {
 
     render() {
         let multiplexerError = <div/>
-        if (this.state.multiplexerError && this.state.showMultiplexerError) {
+        if (this.state.multiplexerError && this.state.multiplexerEnabled) {
             multiplexerError = <text x={200} y={40} style={{fill: red, fontSize: "1.5em", fontWeight: "bold"}}>
-                Error connecting to multiplexer / DSP switch (press reset)
+                Error connecting to multiplexer / DSP switch (toggle a DSP)
             </text>
         }
         let expanderError = <div/>
@@ -265,23 +267,28 @@ export default class Diagram extends React.Component {
                 {multiplexerError}
                 {expanderError}
 
-                {this.drawDspButton(0, 30, 0)}
-                <line x1={120} y1={30} x2={160} y2={30}/>
+                {this.drawDspButton(0, 30, 1)}
+                <line x1={120} y1={30} x2={160} y2={30} style={{stroke: this.state.multiplexerEnabled?fill:red}}/>
 
-                {this.drawDspButton(0, 130, 1)}
-                <line x1={120} y1={130} x2={160} y2={130}/>
+                {this.drawDspButton(0, 130, 2)}
+                <line x1={120} y1={130} x2={160} y2={130} style={{stroke: this.state.multiplexerEnabled?fill:red}}/>
 
-                {this.drawDspButton(0, 230, 2)}
-                <line x1={120} y1={230} x2={160} y2={230}/>
+                {this.drawDspButton(0, 230, 3)}
+                <line x1={120} y1={230} x2={160} y2={230} style={{stroke: this.state.multiplexerEnabled?fill:red}}/>
 
-                {this.drawDspButton(0, 330, 3)}
-                <line x1={120} y1={330} x2={160} y2={330}/>
+                {this.drawDspButton(0, 330, 4)}
+                <line x1={120} y1={330} x2={160} y2={330} style={{stroke: this.state.multiplexerEnabled?fill:red}}/>
 
-                {this.drawDspButton(0, 430, 4)}
-                <line x1={120} y1={430} x2={160} y2={430}/>
+                {this.drawDspButton(0, 430, 5)}
+                <line x1={120} y1={430} x2={160} y2={430} style={{stroke: this.state.multiplexerEnabled?fill:red}}/>
 
                 {/*connect all DSPs*/}
-                <line x1={160} y1={30} x2={160} y2={430}/>
+                <line x1={160} y1={30} x2={160} y2={430} style={{stroke: this.state.multiplexerEnabled?fill:red}}/>
+                <line x1={160} y1={330} x2={220} y2={330} style={{stroke: this.state.multiplexerEnabled?fill:red}}/>
+                <ArrowRight x={220} y={330} style={{
+                    stroke: this.state.multiplexerEnabled?fill:red,
+                    fill: this.state.multiplexerEnabled?fill:red,
+                }}/>
 
                 {/*Program*/}
                 <RoundedRect
@@ -302,8 +309,6 @@ export default class Diagram extends React.Component {
                 <line x1={120} y1={710} x2={298} y2={710}/>
 
                 {/*Besturing*/}
-                <line x1={160} y1={330} x2={220} y2={330}/>
-                <ArrowRight x={220} y={330}/>
                 <Diamond
                     x={238} y={330} text={"Besturing"}
                     color={this.state.program?red:fill}
