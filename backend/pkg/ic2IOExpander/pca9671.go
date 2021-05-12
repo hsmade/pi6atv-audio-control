@@ -1,4 +1,4 @@
-package pca9671
+package ic2IOExpander
 
 import (
 	"encoding/json"
@@ -40,7 +40,7 @@ func NewPCA9671(address uint16, filename string) (*PCA9671, error) {
 		state:   [2]byte{0x00, 0x00}, // P07 P06 P05 P04 P03 P02 P01 P00, P17 P16 P15 P14 P13 P12 P11 P10
 		logger: logrus.WithFields(logrus.Fields{
 			"address": fmt.Sprintf("%x", address),
-			"package": "pca9671",
+			"package": "ic2IOExpander",
 		}),
 		lock:     &sync.Mutex{},
 		filename: filename,
@@ -72,7 +72,7 @@ func NewPCA9671(address uint16, filename string) (*PCA9671, error) {
 	p.device = &i2c.Dev{Addr: address, Bus: b}
 
 	err = p.restoreDump() // restore the previous known state
-	return &p, err        // FIXME: return p.Check()
+	return &p, err
 }
 
 func (p *PCA9671) Close() error {
@@ -136,31 +136,9 @@ func (p *PCA9671) storeDump() error {
 	return nil
 }
 
-// Check polls the device to see that it's connected
-func (p *PCA9671) Check() error {
-	// addr 1111 1000, addr-device+0
-	//  Re-START
-	// addr 1111 1001, read
-	// NACK
-	device := &i2c.Dev{Addr: 248, Bus: p.bus}
-	data := make([]byte, 3)
-	err := device.Tx([]byte{byte(p.address)}, data)
-	if err != nil {
-		return errors.Wrap(err, "Opening reading device ID")
-	}
-	p.logger.Debugf("received ID byte: %#b", data)
-	// FIXME: check response
-	// m m m m m m m m  c c c c c c c f  f p p p p r r r
-	// manufacturer(8), category(7), feature(2+4), revision(3)
-
-	return errors.New("Not implemented yet")
-}
-
 // GetAll gets the state of all ports
 func (p *PCA9671) GetAll() map[int]bool {
 	result := make(map[int]bool, 16)
-	p.lock.Lock()
-	defer p.lock.Unlock()
 	for i := 0; i < 16; i++ {
 		port := i
 		if port > 7 {
@@ -177,7 +155,7 @@ func (p *PCA9671) SetAll(state map[int]bool) error {
 	for i, isSet := range state {
 		p.state = setBit(p.state, i, isSet)
 	}
-	p.lock.Unlock()
+	defer p.lock.Unlock()
 	return p.writeState()
 }
 
@@ -233,7 +211,7 @@ func (p *PCA9671) Get(port int) (bool, error) {
 func (p *PCA9671) Set(port int, state bool) error {
 	p.lock.Lock()
 	p.state = setBit(p.state, port, state)
-	p.lock.Unlock()
+	defer p.lock.Unlock()
 	return p.writeState()
 }
 

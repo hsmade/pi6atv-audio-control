@@ -1,4 +1,4 @@
-package tca9548a
+package i2cMultiplexer
 
 import (
 	"fmt"

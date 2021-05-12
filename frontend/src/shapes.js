@@ -100,18 +100,34 @@ export class Diamond extends React.Component {
     render() {
         const x = parseInt(this.props.x)
         const y = parseInt(this.props.y) - 30
+        let text2 = <div/>
+        let text = <text
+            x="50%" y="50%"
+            dominantBaseline="middle" textAnchor="middle"
+            fill="white"
+            >{this.props.text}</text>
+        if (this.props.text2 !== undefined) {
+            text = <text
+                x="50%" y="40%"
+                dominantBaseline="middle" textAnchor="middle"
+                fill="white"
+            >{this.props.text}</text>
+            text2 = <text
+                x="50%" y="60%"
+                dominantBaseline="middle" textAnchor="middle"
+                fill="white"
+            >{this.props.text2}</text>
+
+        }
         return (
-            <svg height={60} width={120} x={x} y={y}>
+            <svg height={80} width={120} x={x} y={y}>
                 <polygon
-                    points={"1,30 60,1 119,30 60,59 1,30"}
+                    points={"1,40 60,1 119,40 60,79 1,40"}
                     fill={this.props.color}
                     stroke={stroke} strokeWidth={2}
                 />
-                <text
-                    x="50%" y="50%"
-                    dominantBaseline="middle" textAnchor="middle"
-                    fill="white"
-                >{this.props.text}</text>
+                {text}
+                {text2}
             </svg>
         )
     }
