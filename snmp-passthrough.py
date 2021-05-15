@@ -6,12 +6,7 @@ import snmp_passpersist as snmp
 import requests
 
 PP = snmp.PassPersist(".1.3.6.1.4.1.8072.2.255")
-ports = {
-    '0': "DSP 1",
-    '1': "DSP 2",
-    '2': "DSP 3",
-    '3': "DSP 4",
-    '4': "DSP 5",
+io_ports = {
     '5': "program",
     '6': "reset",
     '7': "carrier 7.02",
@@ -26,9 +21,10 @@ ports = {
 
 
 def update():
-    PP.add_str("1.255", "error")
+    PP.add_str("1.255", "IO expander error")
+    PP.add_str("1.254", "MPX connected")
     try:
-        resp = requests.get("http://localhost/control/")
+        resp = requests.get("http://localhost/control/io/")
         if not resp.ok:
             raise RuntimeError(resp.status_code)
         data = resp.json()
@@ -36,9 +32,13 @@ def update():
         PP.add_int("0.255", 1)
     else:
         PP.add_int("0.255", 0)
-        for port, name in ports.items():
+        for port, name in io_ports.items():
             PP.add_int("0.{}".format(port), (0, 1)[data[port]])
             PP.add_str("1.{}".format(port), name)
+        if data.get("0", False) and data.get("17", False):
+            PP.add_int("0.254", 1)
+        else:
+            PP.add_int("0.254", 0)
 
 
 def main():
