@@ -1,4 +1,4 @@
-# PI6ATV audio control
+# PI6ATV audio control for modulator
 This package installs the software to:
  * read the different sensors on the audio control board
  * control the programming of the DSPs
